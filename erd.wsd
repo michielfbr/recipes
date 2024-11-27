@@ -1,0 +1,84 @@
+
+@startuml Recipes
+' To preview this file in VSCode: install an extension like [PlantUML](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml).
+' Then hit ⌥D from the file.
+
+' hide the spot
+' hide circle
+
+' avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "User" as user {
+  *id : integer <<generated>>
+  --
+  email : string
+  password : string
+  first_name : string
+  last_name : string
+}
+
+entity "UserRecipes" as user_recipes {
+  *id : integer <<generated>>
+  --
+  user_id : integer
+  recipe_id : integer
+}
+
+entity "Recipe" as recipe {
+  *id : integer <<generated>>
+  --
+  title : string
+  instructions : text
+  cooking_time : integer
+  image_url : string
+  source : string
+}
+
+entity "RecipeIngredients" as recipe_ingredients {
+  *id : integer <<generated>>
+  --
+  quantity : float
+  order : integer
+  remark : string
+  
+  recipe_id : integer
+  unit_id : integer
+  ingredient_id : integer
+}
+
+entity "Ingredient" as ingredient {
+  *id : integer <<generated>>
+  --
+  name : string
+}
+
+entity "Unit" as unit {
+  *id : integer <<generated>>
+  --
+  full_name : string
+  short_name : string
+}
+entity "RecipeCategories" as recipe_categories {
+  *id : integer <<generated>>
+  --
+  recipe_id : integer
+  category_id : integer
+}
+
+entity "Category" as category {
+  *id : integer <<generated>>
+  --
+  name : string
+  color : string
+}
+
+user ||..o{ user_recipes
+user_recipes ||..|| recipe
+recipe ||..o{ recipe_ingredients
+recipe ||..o{ recipe_categories
+recipe_ingredients ||..|| unit
+ingredient ||..o{ recipe_ingredients
+category ||..o{ recipe_categories
+
+@enduml
