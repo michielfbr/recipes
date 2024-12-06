@@ -43,7 +43,7 @@ defmodule RecipesWeb do
         layouts: [html: RecipesWeb.Layouts]
 
       import Plug.Conn
-      import RecipesWeb.Gettext
+      use Gettext, backend: RecipesWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule RecipesWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import RecipesWeb.CoreComponents
-      import RecipesWeb.Gettext
+      use Gettext, backend: RecipesWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
