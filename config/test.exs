@@ -1,8 +1,5 @@
 import Config
 
-# Only in tests, remove the complexity from the password hashing algorithm
-config :argon2_elixir, t_cost: 1, m_cost: 8
-
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -20,7 +17,7 @@ config :recipes, Recipes.Repo,
 # you can enable the server option below.
 config :recipes, RecipesWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "krPpqDAMKfntQchiW3AEugAfSYmrZH4En7bXNGRnegpoA6Gq+OrUAcUngWDTBU+8",
+  secret_key_base: "JkA2S/xu4nuoIyaCVRhdGQOlW4PNhurYh4WuAaT0LMMN8hKx4X1lomFMUQ75b5uY",
   server: false
 
 # In test we don't send emails
@@ -38,3 +35,7 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# Sort query params output of verified routes for robust url comparisons
+config :phoenix,
+  sort_verified_routes_query_params: true

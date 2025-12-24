@@ -12,8 +12,6 @@ defmodule Recipes.Application do
       Recipes.Repo,
       {DNSCluster, query: Application.get_env(:recipes, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Recipes.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: Recipes.Finch},
       # Start a worker by calling: Recipes.Worker.start_link(arg)
       # {Recipes.Worker, arg},
       # Start to serve requests, typically the last entry
