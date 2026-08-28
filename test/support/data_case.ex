@@ -1,4 +1,4 @@
-defmodule Recipes.DataCase do
+defmodule MyRecipeBook.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -10,7 +10,7 @@ defmodule Recipes.DataCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use Recipes.DataCase, async: true`, although
+  by setting `use MyRecipeBook.DataCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -18,17 +18,17 @@ defmodule Recipes.DataCase do
 
   using do
     quote do
-      alias Recipes.Repo
+      alias MyRecipeBook.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Recipes.DataCase
+      import MyRecipeBook.DataCase
     end
   end
 
   setup tags do
-    Recipes.DataCase.setup_sandbox(tags)
+    MyRecipeBook.DataCase.setup_sandbox(tags)
     :ok
   end
 
@@ -36,7 +36,7 @@ defmodule Recipes.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Recipes.Repo, shared: not tags[:async])
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(MyRecipeBook.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 

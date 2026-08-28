@@ -1,4 +1,4 @@
-# Recipes
+# MyRecipeBook
 
 A tool to save, edit and browse through the recipes you collect.
 

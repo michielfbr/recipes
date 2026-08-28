@@ -1,5 +1,5 @@
 
-@startuml Recipes
+@startuml MyRecipeBook
 ' To preview this file in VSCode: install an extension like [PlantUML](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml).
 ' Then hit ⌥D from the file.
 
@@ -18,7 +18,7 @@ entity "User" as user {
   last_name : string
 }
 
-entity "UserRecipes" as user_recipes {
+entity "UserMyRecipeBook" as user_my_recipe_book {
   *id : integer <<generated>>
   --
   user_id : integer
@@ -73,8 +73,8 @@ entity "Category" as category {
   color : string
 }
 
-user ||..o{ user_recipes
-user_recipes ||..|| recipe
+user ||..o{ user_my_recipe_book
+user_my_recipe_book ||..|| recipe
 recipe ||..o{ recipe_ingredients
 recipe ||..o{ recipe_categories
 recipe_ingredients ||..|| unit
