@@ -1,9 +1,9 @@
-defmodule Recipes.MixProject do
+defmodule MyRecipeBook.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :recipes,
+      app: :my_recipe_book,
       version: "0.1.0",
       elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule Recipes.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Recipes.Application, []},
+      mod: {MyRecipeBook.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -83,10 +83,10 @@ defmodule Recipes.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind recipes", "esbuild recipes"],
+      "assets.build": ["compile", "tailwind my_recipe_book", "esbuild my_recipe_book"],
       "assets.deploy": [
-        "tailwind recipes --minify",
-        "esbuild recipes --minify",
+        "tailwind my_recipe_book --minify",
+        "esbuild my_recipe_book --minify",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
