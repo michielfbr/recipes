@@ -2,9 +2,10 @@ version: 2
 updates:
   - package-ecosystem: "mix"
     directory: "/"
+    cooldown:
+      default-days: 7
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "07:00"
       timezone: "Europe/Amsterdam"
     target-branch: "main"
