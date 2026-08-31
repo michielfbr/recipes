@@ -67,6 +67,11 @@ defmodule MyRecipeBookWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
+
+      live "/recipes", RecipeLive.Index, :index
+      live "/recipes/new", RecipeLive.Form, :new
+      live "/recipes/:id", RecipeLive.Show, :show
+      live "/recipes/:id/edit", RecipeLive.Form, :edit
     end
 
     post "/users/log-in", UserSessionController, :create

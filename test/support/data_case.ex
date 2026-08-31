@@ -24,6 +24,7 @@ defmodule MyRecipeBook.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import MyRecipeBook.DataCase
+      import Assertions
     end
   end
 
