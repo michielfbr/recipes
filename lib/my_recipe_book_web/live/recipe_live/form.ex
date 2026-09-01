@@ -27,6 +27,10 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
             />
           </div>
         </.inputs_for>
+        <.button type="button" name="recipe[add_step][]" value="new" phx-click={JS.dispatch("change")}>
+          Add step
+        </.button>
+        <%!-- <.button phx-click="add_steps">add more</.button> --%>
         <.input field={@form[:source]} type="text" label="Source" />
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Recipe</.button>
@@ -68,6 +72,18 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
   end
 
   @impl true
+  def handle_event("validate", %{"recipe" => %{"add_step" => ["new"]} = recipe_params}, socket) do
+    %{current_scope: scope, recipe: recipe} = socket.assigns
+
+    form =
+      scope
+      |> Recipes.change_recipe(recipe, recipe_params)
+      |> Recipes.add_recipe_step()
+      |> to_form(action: :validate)
+
+    socket |> assign(form: form) |> noreply()
+  end
+
   def handle_event("validate", %{"recipe" => recipe_params}, socket) do
     %{current_scope: scope, recipe: recipe} = socket.assigns
     form = scope |> Recipes.change_recipe(recipe, recipe_params) |> to_form(action: :validate)

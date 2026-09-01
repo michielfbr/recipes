@@ -163,4 +163,8 @@ defmodule MyRecipeBook.Recipes do
 
     Recipe.changeset(recipe, attrs, scope)
   end
+
+  def add_recipe_step(%Ecto.Changeset{} = changeset) do
+    Recipe.add_step(changeset)
+  end
 end
