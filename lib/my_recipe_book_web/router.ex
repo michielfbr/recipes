@@ -54,6 +54,11 @@ defmodule MyRecipeBookWeb.Router do
       on_mount: [{MyRecipeBookWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+
+      live "/recipes", RecipeLive.Index, :index
+      live "/recipes/new", RecipeLive.Form, :new
+      live "/recipes/:id", RecipeLive.Show, :show
+      live "/recipes/:id/edit", RecipeLive.Form, :edit
     end
 
     post "/users/update-password", UserSessionController, :update_password
@@ -67,11 +72,6 @@ defmodule MyRecipeBookWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
-
-      live "/recipes", RecipeLive.Index, :index
-      live "/recipes/new", RecipeLive.Form, :new
-      live "/recipes/:id", RecipeLive.Show, :show
-      live "/recipes/:id/edit", RecipeLive.Form, :edit
     end
 
     post "/users/log-in", UserSessionController, :create

@@ -32,6 +32,23 @@ defmodule MyRecipeBookWeb.RecipeLiveTest do
     %{recipe: recipe}
   end
 
+  describe "when logged out" do
+    setup [:create_recipe]
+
+    test "redirects every recipe route to log in", %{recipe: recipe} do
+      conn = build_conn()
+
+      for path <- [
+            ~p"/recipes",
+            ~p"/recipes/new",
+            ~p"/recipes/#{recipe}",
+            ~p"/recipes/#{recipe}/edit"
+          ] do
+        assert {:error, {:redirect, %{to: "/users/log-in"}}} = live(conn, path)
+      end
+    end
+  end
+
   describe "Index" do
     setup [:create_recipe]
 

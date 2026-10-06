@@ -2,7 +2,6 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
   use MyRecipeBookWeb, :live_view
 
   alias MyRecipeBook.Recipes
-  alias MyRecipeBook.Recipes.Recipe
 
   @impl true
   def render(assigns) do
