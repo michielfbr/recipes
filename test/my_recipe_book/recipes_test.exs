@@ -104,5 +104,66 @@ defmodule MyRecipeBook.RecipesTest do
       recipe = recipe_fixture(scope)
       assert %Ecto.Changeset{} = Recipes.change_recipe(scope, recipe)
     end
+
+    test "add_recipe_step/1 adds step 1 to a recipe without steps" do
+      scope = user_scope_fixture()
+      recipe = %Recipe{user_id: scope.user.id, steps: []}
+
+      changeset = scope |> Recipes.change_recipe(recipe) |> Recipes.add_recipe_step()
+
+      assert [%Recipe.Step{no: 1}] = Ecto.Changeset.get_field(changeset, :steps)
+    end
+
+    test "add_recipe_step/1 appends the next step number" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset = scope |> Recipes.change_recipe(recipe) |> Recipes.add_recipe_step()
+
+      assert [1, 2, 3] = changeset |> Ecto.Changeset.get_field(:steps) |> Enum.map(& &1.no)
+    end
+
+    test "change_recipe/3 numbers steps by their position, ignoring the given no" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset =
+        Recipes.change_recipe(scope, recipe, %{
+          steps: %{
+            "0" => %{no: 1, instructions: "first"},
+            "2" => %{no: 3, instructions: "third"}
+          }
+        })
+
+      assert [{1, "first"}, {2, "third"}] =
+               changeset
+               |> Ecto.Changeset.get_field(:steps)
+               |> Enum.map(&{&1.no, &1.instructions})
+    end
+
+    test "add_recipe_step/1 adds a step when only other fields are invalid" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset =
+        scope |> Recipes.change_recipe(recipe, %{title: nil}) |> Recipes.add_recipe_step()
+
+      refute changeset.valid?
+      assert length(Ecto.Changeset.get_field(changeset, :steps)) == 3
+    end
+
+    test "add_recipe_step/1 does not add a step when a step is invalid" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset =
+        scope
+        |> Recipes.change_recipe(recipe, %{
+          steps: [%{no: 1, instructions: "first"}, %{no: 2, instructions: ""}]
+        })
+        |> Recipes.add_recipe_step()
+
+      assert length(Ecto.Changeset.get_field(changeset, :steps)) == 2
+    end
   end
 end

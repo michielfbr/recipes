@@ -17,19 +17,28 @@ defmodule MyRecipeBook.Recipes.Recipe do
   def changeset(recipe, attrs, user_scope) do
     recipe
     |> cast(attrs, [:title, :source])
-    |> cast_embed(:steps, required: true)
+    |> cast_embed(:steps, required: true, with: &Step.changeset/3)
     |> validate_required([:title])
     |> put_change(:user_id, user_scope.user.id)
   end
 
-  def add_step(%Ecto.Changeset{valid?: true} = changeset) do
-    steps = get_field(changeset, :steps)
-    no = List.last(steps).no + 1
+  def add_step(%Ecto.Changeset{} = changeset) do
+    if steps_valid?(changeset) do
+      steps = get_field(changeset, :steps)
 
-    put_change(changeset, :steps, steps ++ [%Step{no: no}])
-
-    # changeset
+      put_change(changeset, :steps, steps ++ [%Step{no: length(steps) + 1}])
+    else
+      changeset
+    end
   end
 
-  def add_step(%Ecto.Changeset{} = changeset), do: changeset
+  # Only looks at the individual steps, so errors on other fields (or the
+  # required error on an empty step list) don't block adding a step.
+  # Steps removed through `on_replace: :delete` show up with action :replace.
+  defp steps_valid?(changeset) do
+    changeset
+    |> get_change(:steps, [])
+    |> Enum.reject(&(&1.action == :replace))
+    |> Enum.all?(& &1.valid?)
+  end
 end

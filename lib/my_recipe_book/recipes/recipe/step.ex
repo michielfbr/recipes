@@ -10,10 +10,17 @@ defmodule MyRecipeBook.Recipes.Recipe.Step do
     field :instructions, :string
   end
 
-  @doc false
-  def changeset(%Step{} = step, attrs) do
+  @doc """
+  `no` is derived from the step's position in the recipe's step list (0-based,
+  as given by `cast_embed/3`), so steps are always numbered consecutively.
+  """
+  def changeset(%Step{} = step, attrs, position) do
     step
-    |> cast(attrs, [:no, :instructions])
+    |> cast(attrs, [:instructions])
+    |> put_no(position)
     |> validate_required([:no, :instructions])
   end
+
+  defp put_no(changeset, nil), do: changeset
+  defp put_no(changeset, position), do: put_change(changeset, :no, position + 1)
 end

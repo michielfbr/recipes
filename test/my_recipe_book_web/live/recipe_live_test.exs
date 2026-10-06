@@ -10,19 +10,19 @@ defmodule MyRecipeBookWeb.RecipeLiveTest do
   # `Recipes.new_recipe/1` seeds the new-recipe form with a single empty step, so
   # @create_attrs may only address index 0.
   @create_attrs %{
-    steps: %{"0" => %{no: 1, instructions: "some instructions"}},
+    steps: %{"0" => %{instructions: "some instructions"}},
     source: "some source",
     title: "some title"
   }
   @update_attrs %{
     steps: %{
-      "0" => %{no: 1, instructions: "some updated instructions"},
-      "1" => %{no: 2, instructions: "even more updated instructions"}
+      "0" => %{instructions: "some updated instructions"},
+      "1" => %{instructions: "even more updated instructions"}
     },
     source: "some other source",
     title: "some updated title"
   }
-  @invalid_attrs %{steps: %{"0" => %{no: 1, instructions: ""}}, title: nil, source: nil}
+  @invalid_attrs %{steps: %{"0" => %{instructions: ""}}, title: nil, source: nil}
 
   setup :register_and_log_in_user
 

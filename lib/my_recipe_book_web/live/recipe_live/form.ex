@@ -17,7 +17,6 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
         <%!-- <.input field={@form[:instructions]} type="textarea" label="Instructions --" /> --%>
         <.inputs_for :let={step} field={@form[:steps]}>
           <div class="mt-2">
-            <.input field={step[:no]} type="number" hidden />
             <.input
               field={step[:instructions]}
               type="textarea"
