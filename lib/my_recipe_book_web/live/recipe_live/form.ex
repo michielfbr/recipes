@@ -25,10 +25,14 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
             />
           </div>
         </.inputs_for>
-        <.button type="button" name="recipe[add_step][]" value="new" phx-click={JS.dispatch("change")}>
-          Add step
-        </.button>
-        <%!-- <.button phx-click="add_steps">add more</.button> --%>
+        <p
+          :for={msg <- translate_errors(@form.errors, :steps)}
+          id="recipe-steps-error"
+          class="mt-1.5 flex gap-2 items-center text-sm text-error"
+        >
+          <.icon name="hero-exclamation-circle" class="size-5" />
+          {msg}
+        </p>
         <.input field={@form[:source]} type="text" label="Source" />
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Recipe</.button>
@@ -56,7 +60,7 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
     socket
     |> assign(:page_title, "Edit Recipe")
     |> assign(:recipe, recipe)
-    |> assign(:form, to_form(Recipes.change_recipe(socket.assigns.current_scope, recipe)))
+    |> assign_form(Recipes.change_recipe(socket.assigns.current_scope, recipe))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -66,27 +70,15 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
     socket
     |> assign(:page_title, "New Recipe")
     |> assign(:recipe, recipe)
-    |> assign(:form, to_form(Recipes.change_recipe(scope, recipe)))
+    |> assign_form(Recipes.change_recipe(scope, recipe))
   end
 
   @impl true
-  def handle_event("validate", %{"recipe" => %{"add_step" => ["new"]} = recipe_params}, socket) do
-    %{current_scope: scope, recipe: recipe} = socket.assigns
-
-    form =
-      scope
-      |> Recipes.change_recipe(recipe, recipe_params)
-      |> Recipes.add_recipe_step()
-      |> to_form(action: :validate)
-
-    socket |> assign(form: form) |> noreply()
-  end
-
   def handle_event("validate", %{"recipe" => recipe_params}, socket) do
     %{current_scope: scope, recipe: recipe} = socket.assigns
-    form = scope |> Recipes.change_recipe(recipe, recipe_params) |> to_form(action: :validate)
+    changeset = Recipes.change_recipe(scope, recipe, recipe_params)
 
-    socket |> assign(form: form) |> noreply()
+    socket |> assign_form(changeset, action: :validate) |> noreply()
   end
 
   def handle_event("save", %{"recipe" => recipe_params}, socket) do
@@ -104,7 +96,7 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
         |> noreply()
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        socket |> assign(form: to_form(changeset)) |> noreply()
+        socket |> assign_form(changeset) |> noreply()
     end
   end
 
@@ -119,8 +111,17 @@ defmodule MyRecipeBookWeb.RecipeLive.Form do
         |> noreply()
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        socket |> assign(form: to_form(changeset)) |> noreply()
+        socket |> assign_form(changeset) |> noreply()
     end
+  end
+
+  defp assign_form(socket, changeset, opts \\ []) do
+    form =
+      changeset
+      |> Recipes.put_empty_last_recipe_step()
+      |> to_form(opts)
+
+    assign(socket, :form, form)
   end
 
   defp return_path(_scope, "index", _recipe), do: ~p"/recipes"

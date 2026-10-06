@@ -119,6 +119,41 @@ defmodule MyRecipeBookWeb.RecipeLiveTest do
     end
   end
 
+  describe "Form" do
+    test "shows an error when saving without any filled in step", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
+
+      form_live
+      |> form("#recipe-form",
+        recipe: %{title: "some title", steps: %{"0" => %{instructions: ""}}}
+      )
+      |> render_submit()
+
+      assert has_element?(form_live, "#recipe-steps-error")
+      assert has_element?(form_live, "#recipe_steps_0_instructions")
+    end
+
+    test "keeps one empty step at the end while typing", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
+
+      assert has_element?(form_live, "#recipe_steps_0_instructions")
+      refute has_element?(form_live, "#recipe_steps_1_instructions")
+
+      form_live
+      |> form("#recipe-form", recipe: %{steps: %{"0" => %{instructions: "f"}}})
+      |> render_change()
+
+      assert has_element?(form_live, "#recipe_steps_1_instructions")
+      refute has_element?(form_live, "#recipe_steps_2_instructions")
+
+      form_live
+      |> form("#recipe-form", recipe: %{steps: %{"0" => %{instructions: ""}}})
+      |> render_change()
+
+      refute has_element?(form_live, "#recipe_steps_1_instructions")
+    end
+  end
+
   describe "Show" do
     setup [:create_recipe]
 

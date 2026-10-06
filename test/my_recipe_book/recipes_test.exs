@@ -105,24 +105,6 @@ defmodule MyRecipeBook.RecipesTest do
       assert %Ecto.Changeset{} = Recipes.change_recipe(scope, recipe)
     end
 
-    test "add_recipe_step/1 adds step 1 to a recipe without steps" do
-      scope = user_scope_fixture()
-      recipe = %Recipe{user_id: scope.user.id, steps: []}
-
-      changeset = scope |> Recipes.change_recipe(recipe) |> Recipes.add_recipe_step()
-
-      assert [%Recipe.Step{no: 1}] = Ecto.Changeset.get_field(changeset, :steps)
-    end
-
-    test "add_recipe_step/1 appends the next step number" do
-      scope = user_scope_fixture()
-      recipe = recipe_fixture(scope)
-
-      changeset = scope |> Recipes.change_recipe(recipe) |> Recipes.add_recipe_step()
-
-      assert [1, 2, 3] = changeset |> Ecto.Changeset.get_field(:steps) |> Enum.map(& &1.no)
-    end
-
     test "change_recipe/3 numbers steps by their position, ignoring the given no" do
       scope = user_scope_fixture()
       recipe = recipe_fixture(scope)
@@ -141,29 +123,113 @@ defmodule MyRecipeBook.RecipesTest do
                |> Enum.map(&{&1.no, &1.instructions})
     end
 
-    test "add_recipe_step/1 adds a step when only other fields are invalid" do
+    test "put_empty_last_recipe_step/1 adds step 1 to a recipe without steps" do
+      scope = user_scope_fixture()
+      recipe = %Recipe{user_id: scope.user.id, steps: []}
+
+      changeset = scope |> Recipes.change_recipe(recipe) |> Recipes.put_empty_last_recipe_step()
+
+      assert [%Recipe.Step{no: 1}] = Ecto.Changeset.get_field(changeset, :steps)
+    end
+
+    test "put_empty_last_recipe_step/1 appends an empty step after a filled in last step" do
       scope = user_scope_fixture()
       recipe = recipe_fixture(scope)
 
       changeset =
-        scope |> Recipes.change_recipe(recipe, %{title: nil}) |> Recipes.add_recipe_step()
+        scope
+        |> Recipes.change_recipe(recipe, %{title: nil})
+        |> Recipes.put_empty_last_recipe_step()
 
-      refute changeset.valid?
-      assert length(Ecto.Changeset.get_field(changeset, :steps)) == 3
+      assert [{1, _}, {2, _}, {3, nil}] = steps(changeset)
     end
 
-    test "add_recipe_step/1 does not add a step when a step is invalid" do
+    test "put_empty_last_recipe_step/1 keeps a single empty last step" do
       scope = user_scope_fixture()
       recipe = recipe_fixture(scope)
 
       changeset =
         scope
         |> Recipes.change_recipe(recipe, %{
-          steps: [%{no: 1, instructions: "first"}, %{no: 2, instructions: ""}]
+          steps: [%{instructions: "first"}, %{instructions: " "}]
         })
-        |> Recipes.add_recipe_step()
+        |> Recipes.put_empty_last_recipe_step()
 
-      assert length(Ecto.Changeset.get_field(changeset, :steps)) == 2
+      assert [{1, "first"}, {2, nil}] = steps(changeset)
+    end
+
+    test "put_empty_last_recipe_step/1 collapses empty last steps into one" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset =
+        scope
+        |> Recipes.change_recipe(recipe, %{
+          steps: [
+            %{instructions: ""},
+            %{instructions: "second"},
+            %{instructions: ""},
+            %{instructions: ""}
+          ]
+        })
+        |> Recipes.put_empty_last_recipe_step()
+
+      assert [{1, nil}, {2, "second"}, {3, nil}] = steps(changeset)
+    end
+
+    test "change_recipe/3 keeps empty steps while editing" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      changeset =
+        Recipes.change_recipe(scope, recipe, %{
+          steps: [%{instructions: "first"}, %{instructions: ""}]
+        })
+
+      assert changeset.valid?
+      assert [1, 2] = changeset |> Ecto.Changeset.get_field(:steps) |> Enum.map(& &1.no)
+    end
+
+    test "create_recipe/2 drops empty steps and renumbers the rest" do
+      scope = user_scope_fixture()
+
+      attrs =
+        recipe_attrs(%{
+          steps: [
+            %{instructions: "first"},
+            %{instructions: ""},
+            %{instructions: "   "},
+            %{instructions: "fourth"}
+          ]
+        })
+
+      assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe(scope, attrs)
+      assert [{1, "first"}, {2, "fourth"}] = Enum.map(recipe.steps, &{&1.no, &1.instructions})
+    end
+
+    test "create_recipe/2 with only empty steps returns an error on steps" do
+      scope = user_scope_fixture()
+      attrs = recipe_attrs(%{steps: [%{instructions: ""}, %{instructions: " "}]})
+
+      assert {:error, changeset} = Recipes.create_recipe(scope, attrs)
+      assert %{steps: ["needs at least one step"]} = errors_on(changeset)
+    end
+
+    test "update_recipe/3 drops empty steps and renumbers the rest" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+
+      attrs = %{steps: [%{instructions: ""}, %{instructions: "second"}]}
+
+      assert {:ok, %Recipe{} = recipe} = Recipes.update_recipe(scope, recipe, attrs)
+      assert [{1, "second"}] = Enum.map(recipe.steps, &{&1.no, &1.instructions})
+      assert recipe == Recipes.get_recipe!(scope, recipe.id)
+    end
+
+    defp steps(changeset) do
+      changeset
+      |> Ecto.Changeset.get_field(:steps)
+      |> Enum.map(&{&1.no, &1.instructions})
     end
   end
 end

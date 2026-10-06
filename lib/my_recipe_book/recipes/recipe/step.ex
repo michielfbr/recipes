@@ -18,7 +18,6 @@ defmodule MyRecipeBook.Recipes.Recipe.Step do
     step
     |> cast(attrs, [:instructions])
     |> put_no(position)
-    |> validate_required([:no, :instructions])
   end
 
   defp put_no(changeset, nil), do: changeset

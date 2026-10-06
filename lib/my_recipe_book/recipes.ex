@@ -97,6 +97,7 @@ defmodule MyRecipeBook.Recipes do
     with {:ok, recipe = %Recipe{}} <-
            %Recipe{}
            |> Recipe.changeset(attrs, scope)
+           |> Recipe.drop_empty_steps()
            |> Repo.insert() do
       broadcast_recipe(scope, {:created, recipe})
       {:ok, recipe}
@@ -121,6 +122,7 @@ defmodule MyRecipeBook.Recipes do
     with {:ok, recipe = %Recipe{}} <-
            recipe
            |> Recipe.changeset(attrs, scope)
+           |> Recipe.drop_empty_steps()
            |> Repo.update() do
       broadcast_recipe(scope, {:updated, recipe})
       {:ok, recipe}
@@ -164,7 +166,7 @@ defmodule MyRecipeBook.Recipes do
     Recipe.changeset(recipe, attrs, scope)
   end
 
-  def add_recipe_step(%Ecto.Changeset{} = changeset) do
-    Recipe.add_step(changeset)
+  def put_empty_last_recipe_step(%Ecto.Changeset{} = changeset) do
+    Recipe.put_empty_last_step(changeset)
   end
 end
