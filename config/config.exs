@@ -7,32 +7,32 @@
 # General application configuration
 import Config
 
-config :my_recipe_book, :scopes,
+config :cookbook, :scopes,
   user: [
     default: true,
-    module: MyRecipeBook.Accounts.Scope,
+    module: Cookbook.Accounts.Scope,
     assign_key: :current_scope,
     access_path: [:user, :id],
     schema_key: :user_id,
     schema_type: :id,
     schema_table: :users,
-    test_data_fixture: MyRecipeBook.AccountsFixtures,
+    test_data_fixture: Cookbook.AccountsFixtures,
     test_setup_helper: :register_and_log_in_user
   ]
 
-config :my_recipe_book,
-  ecto_repos: [MyRecipeBook.Repo],
+config :cookbook,
+  ecto_repos: [Cookbook.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
-config :my_recipe_book, MyRecipeBookWeb.Endpoint,
+config :cookbook, CookbookWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: MyRecipeBookWeb.ErrorHTML, json: MyRecipeBookWeb.ErrorJSON],
+    formats: [html: CookbookWeb.ErrorHTML, json: CookbookWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: MyRecipeBook.PubSub,
+  pubsub_server: Cookbook.PubSub,
   live_view: [signing_salt: "b5HgtPJ0"]
 
 # Configure the mailer
@@ -42,12 +42,12 @@ config :my_recipe_book, MyRecipeBookWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :my_recipe_book, MyRecipeBook.Mailer, adapter: Swoosh.Adapters.Local
+config :cookbook, Cookbook.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
-  my_recipe_book: [
+  cookbook: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
@@ -57,7 +57,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
-  my_recipe_book: [
+  cookbook: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css

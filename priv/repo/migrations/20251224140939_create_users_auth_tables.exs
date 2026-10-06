@@ -1,4 +1,4 @@
-defmodule MyRecipeBook.Repo.Migrations.CreateUsersAuthTables do
+defmodule Cookbook.Repo.Migrations.CreateUsersAuthTables do
   use Ecto.Migration
 
   def change do

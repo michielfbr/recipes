@@ -1,4 +1,4 @@
-defmodule MyRecipeBook.Repo.Migrations.CreateRecipes do
+defmodule Cookbook.Repo.Migrations.CreateRecipes do
   use Ecto.Migration
 
   def change do

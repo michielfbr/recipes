@@ -1,4 +1,4 @@
-defmodule MyRecipeBookWeb.ConnCase do
+defmodule CookbookWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -11,7 +11,7 @@ defmodule MyRecipeBookWeb.ConnCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use MyRecipeBookWeb.ConnCase, async: true`, although
+  by setting `use CookbookWeb.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -20,19 +20,19 @@ defmodule MyRecipeBookWeb.ConnCase do
   using do
     quote do
       # The default endpoint for testing
-      @endpoint MyRecipeBookWeb.Endpoint
+      @endpoint CookbookWeb.Endpoint
 
-      use MyRecipeBookWeb, :verified_routes
+      use CookbookWeb, :verified_routes
 
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
-      import MyRecipeBookWeb.ConnCase
+      import CookbookWeb.ConnCase
     end
   end
 
   setup tags do
-    MyRecipeBook.DataCase.setup_sandbox(tags)
+    Cookbook.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 
@@ -45,8 +45,8 @@ defmodule MyRecipeBookWeb.ConnCase do
   test context.
   """
   def register_and_log_in_user(%{conn: conn} = context) do
-    user = MyRecipeBook.AccountsFixtures.user_fixture()
-    scope = MyRecipeBook.Accounts.Scope.for_user(user)
+    user = Cookbook.AccountsFixtures.user_fixture()
+    scope = Cookbook.Accounts.Scope.for_user(user)
 
     opts =
       context
@@ -62,7 +62,7 @@ defmodule MyRecipeBookWeb.ConnCase do
   It returns an updated `conn`.
   """
   def log_in_user(conn, user, opts \\ []) do
-    token = MyRecipeBook.Accounts.generate_user_session_token(user)
+    token = Cookbook.Accounts.generate_user_session_token(user)
 
     maybe_set_token_authenticated_at(token, opts[:token_authenticated_at])
 
@@ -74,6 +74,6 @@ defmodule MyRecipeBookWeb.ConnCase do
   defp maybe_set_token_authenticated_at(_token, nil), do: nil
 
   defp maybe_set_token_authenticated_at(token, authenticated_at) do
-    MyRecipeBook.AccountsFixtures.override_token_authenticated_at(token, authenticated_at)
+    Cookbook.AccountsFixtures.override_token_authenticated_at(token, authenticated_at)
   end
 end

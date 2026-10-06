@@ -1,4 +1,4 @@
-my_recipe_book
+cookbook
 |
 |- recipe_ingredients - ingredients
 |

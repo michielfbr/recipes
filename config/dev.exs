@@ -1,11 +1,11 @@
 import Config
 
 # Configure your database
-config :my_recipe_book, MyRecipeBook.Repo,
+config :cookbook, Cookbook.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "my_recipe_book_dev",
+  database: "cookbook_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -16,7 +16,7 @@ config :my_recipe_book, MyRecipeBook.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :my_recipe_book, MyRecipeBookWeb.Endpoint,
+config :cookbook, CookbookWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
@@ -25,8 +25,8 @@ config :my_recipe_book, MyRecipeBookWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "GeuM36XmoLlHZ8grxaRqpyhbvZmqrINYC8drycCEHHW8DwlucjSXsPOg3EQAkfK6",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:my_recipe_book, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:my_recipe_book, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:cookbook, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:cookbook, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -53,7 +53,7 @@ config :my_recipe_book, MyRecipeBookWeb.Endpoint,
 # different ports.
 
 # Reload browser tabs when matching files change.
-config :my_recipe_book, MyRecipeBookWeb.Endpoint,
+config :cookbook, CookbookWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
@@ -62,13 +62,13 @@ config :my_recipe_book, MyRecipeBookWeb.Endpoint,
       # Gettext translations
       ~r"priv/gettext/.*\.po$"E,
       # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/my_recipe_book_web/router\.ex$"E,
-      ~r"lib/my_recipe_book_web/(controllers|live|components)/.*\.(ex|heex)$"E
+      ~r"lib/cookbook_web/router\.ex$"E,
+      ~r"lib/cookbook_web/(controllers|live|components)/.*\.(ex|heex)$"E
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :my_recipe_book, dev_routes: true
+config :cookbook, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

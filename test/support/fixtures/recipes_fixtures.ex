@@ -1,7 +1,7 @@
-defmodule MyRecipeBook.RecipesFixtures do
+defmodule Cookbook.RecipesFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `MyRecipeBook.Recipes` context.
+  entities via the `Cookbook.Recipes` context.
   """
 
   def recipe_attrs(attrs \\ %{}) do
@@ -21,7 +21,7 @@ defmodule MyRecipeBook.RecipesFixtures do
   def recipe_fixture(scope, attrs \\ %{}) do
     attrs = recipe_attrs(attrs)
 
-    {:ok, recipe} = MyRecipeBook.Recipes.create_recipe(scope, attrs)
+    {:ok, recipe} = Cookbook.Recipes.create_recipe(scope, attrs)
     recipe
   end
 end
