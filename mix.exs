@@ -1,9 +1,9 @@
-defmodule MyRecipeBook.MixProject do
+defmodule Cookbook.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :my_recipe_book,
+      app: :cookbook,
       version: "0.1.0",
       elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule MyRecipeBook.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {MyRecipeBook.Application, []},
+      mod: {Cookbook.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -46,9 +46,7 @@ defmodule MyRecipeBook.MixProject do
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.2.10"},
-      {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.9.0"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
@@ -66,7 +64,12 @@ defmodule MyRecipeBook.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.3.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+
+      # Dev & test
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:lazy_html, ">= 0.1.0", only: :test},
+      {:assertions, "~> 0.20", only: :test}
     ]
   end
 
@@ -83,10 +86,10 @@ defmodule MyRecipeBook.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind my_recipe_book", "esbuild my_recipe_book"],
+      "assets.build": ["compile", "tailwind cookbook", "esbuild cookbook"],
       "assets.deploy": [
-        "tailwind my_recipe_book --minify",
-        "esbuild my_recipe_book --minify",
+        "tailwind cookbook --minify",
+        "esbuild cookbook --minify",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
