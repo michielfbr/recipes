@@ -3,6 +3,8 @@ defmodule CookbookWeb.RecipeLive.Show do
 
   alias Cookbook.Recipes
 
+  on_mount CookbookWeb.RecipeLive.LoadRecipe
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -30,15 +32,12 @@ defmodule CookbookWeb.RecipeLive.Show do
   end
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(_params, _session, socket) do
     if connected?(socket) do
       Recipes.subscribe_recipes(socket.assigns.current_scope)
     end
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Show Recipe")
-     |> assign(:recipe, Recipes.get_recipe!(socket.assigns.current_scope, id))}
+    socket |> assign(:page_title, "Show Recipe") |> ok()
   end
 
   @impl true
@@ -46,21 +45,21 @@ defmodule CookbookWeb.RecipeLive.Show do
         {:updated, %Cookbook.Recipes.Recipe{id: id} = recipe},
         %{assigns: %{recipe: %{id: id}}} = socket
       ) do
-    {:noreply, assign(socket, :recipe, recipe)}
+    socket |> assign(:recipe, recipe) |> noreply()
   end
 
   def handle_info(
         {:deleted, %Cookbook.Recipes.Recipe{id: id}},
         %{assigns: %{recipe: %{id: id}}} = socket
       ) do
-    {:noreply,
-     socket
-     |> put_flash(:error, "The current recipe was deleted.")
-     |> push_navigate(to: ~p"/recipes")}
+    socket
+    |> put_flash(:error, "The current recipe was deleted.")
+    |> push_navigate(to: ~p"/recipes")
+    |> noreply()
   end
 
   def handle_info({type, %Cookbook.Recipes.Recipe{}}, socket)
       when type in [:created, :updated, :deleted] do
-    {:noreply, socket}
+    noreply(socket)
   end
 end

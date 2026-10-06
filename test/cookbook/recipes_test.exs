@@ -28,6 +28,18 @@ defmodule Cookbook.RecipesTest do
       assert_raise Ecto.NoResultsError, fn -> Recipes.get_recipe!(other_scope, recipe.id) end
     end
 
+    test "get_recipe/2 returns the recipe, or nil when it can't be found" do
+      scope = user_scope_fixture()
+      recipe = recipe_fixture(scope)
+      other_scope = user_scope_fixture()
+
+      assert Recipes.get_recipe(scope, recipe.id) == recipe
+      assert Recipes.get_recipe(scope, "#{recipe.id}") == recipe
+      assert Recipes.get_recipe(other_scope, recipe.id) == nil
+      assert Recipes.get_recipe(scope, recipe.id + 1) == nil
+      assert Recipes.get_recipe(scope, "abc") == nil
+    end
+
     test "create_recipe/2 with valid data creates a recipe" do
       valid_attrs = recipe_attrs()
 

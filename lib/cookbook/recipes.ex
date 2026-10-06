@@ -63,6 +63,26 @@ defmodule Cookbook.Recipes do
   end
 
   @doc """
+  Gets a single recipe, or `nil` if it does not exist, belongs to another user
+  or `id` is not a valid id (for example when it comes from the URL).
+
+  ## Examples
+
+      iex> get_recipe(scope, 123)
+      %Recipe{}
+
+      iex> get_recipe(scope, "abc")
+      nil
+
+  """
+  def get_recipe(%Scope{} = scope, id) do
+    case Ecto.Type.cast(:id, id) do
+      {:ok, id} -> Repo.get_by(Recipe, id: id, user_id: scope.user.id)
+      :error -> nil
+    end
+  end
+
+  @doc """
   Creates a recipe.
 
   ## Examples

@@ -3,6 +3,8 @@ defmodule CookbookWeb.RecipeLive.Form do
 
   alias Cookbook.Recipes
 
+  on_mount CookbookWeb.RecipeLive.LoadRecipe
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -54,13 +56,12 @@ defmodule CookbookWeb.RecipeLive.Form do
   defp return_to("show"), do: "show"
   defp return_to(_), do: "index"
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    recipe = Recipes.get_recipe!(socket.assigns.current_scope, id)
+  defp apply_action(socket, :edit, _params) do
+    %{current_scope: scope, recipe: recipe} = socket.assigns
 
     socket
     |> assign(:page_title, "Edit Recipe")
-    |> assign(:recipe, recipe)
-    |> assign_form(Recipes.change_recipe(socket.assigns.current_scope, recipe))
+    |> assign_form(Recipes.change_recipe(scope, recipe))
   end
 
   defp apply_action(socket, :new, _params) do

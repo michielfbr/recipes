@@ -32,6 +32,19 @@ defmodule CookbookWeb.RecipeLiveTest do
     %{recipe: recipe}
   end
 
+  describe "unknown recipe" do
+    test "redirects show and edit to the listing with a flash", %{conn: conn} do
+      other_recipe = recipe_fixture(Cookbook.AccountsFixtures.user_scope_fixture())
+
+      for id <- [other_recipe.id + 1, other_recipe.id, "abc"],
+          path <- [~p"/recipes/#{id}", ~p"/recipes/#{id}/edit"] do
+        assert {:error,
+                {:live_redirect, %{to: "/recipes", flash: %{"error" => "Recipe not found"}}}} =
+                 live(conn, path)
+      end
+    end
+  end
+
   describe "when logged out" do
     setup [:create_recipe]
 
