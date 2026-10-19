@@ -200,6 +200,10 @@ defmodule Cookbook.Recipes do
     Recipe.put_empty_last_ingredient(changeset)
   end
 
+  def ingredient_rows(%Ecto.Changeset{} = changeset) do
+    Recipe.ingredient_rows(changeset)
+  end
+
   # Drops empty steps and ingredients, matches the ingredient names and saves
   # the recipe. Ingredients that don't exist yet are created in the same
   # transaction, so they're only stored when the recipe is.

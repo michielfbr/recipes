@@ -2,6 +2,7 @@ defmodule CookbookWeb.RecipeLive.Form do
   use CookbookWeb, :live_view
 
   alias Cookbook.Recipes
+  alias Cookbook.Recipes.Ingredient
 
   on_mount CookbookWeb.RecipeLive.LoadRecipe
 
@@ -16,6 +17,47 @@ defmodule CookbookWeb.RecipeLive.Form do
 
       <.form for={@form} id="recipe-form" phx-change="validate" phx-submit="save">
         <.input field={@form[:title]} type="text" label="Title" />
+        <section id="recipe-ingredients" phx-hook=".IngredientRows" class="mt-2 mb-4">
+          <h2 class="label mb-1">Ingredients</h2>
+          <.inputs_for :let={ri} field={@form[:recipe_ingredients]}>
+            <.ingredient_row
+              ri={ri}
+              last?={ri.index == @ingredient_count - 1}
+              search={@ingredient_search}
+            />
+          </.inputs_for>
+          <input type="hidden" name="recipe[recipe_ingredients_drop][]" />
+        </section>
+        <script :type={Phoenix.LiveView.ColocatedHook} name=".IngredientRows">
+          // Buttons and options with `data-fill-id` put `data-fill-value` in that
+          // input and trigger the form's phx-change, as if it was typed. When
+          // `data-dispatch-id` is set, that input triggers the change instead.
+          export default {
+            mounted() {
+              this.el.addEventListener("mousedown", (e) => {
+                // keep the focus in the ingredient input when picking an option
+                if (e.target.closest("[role=option]")) e.preventDefault()
+              })
+              this.el.addEventListener("click", (e) => {
+                const button = e.target.closest("[data-fill-id]")
+                if (button) this.fill(button)
+              })
+              this.el.addEventListener("focusout", (e) => {
+                const combobox = e.target.closest("[data-combobox]")
+                if (combobox && !combobox.contains(e.relatedTarget)) {
+                  this.pushEvent("close_ingredient_search", {})
+                }
+              })
+            },
+            fill(button) {
+              const input = document.getElementById(button.dataset.fillId)
+              const dispatcher = document.getElementById(button.dataset.dispatchId) || input
+              input.value = button.dataset.fillValue
+              dispatcher.dispatchEvent(new Event("input", { bubbles: true }))
+              if (button.closest("[role=option]")) input.focus()
+            },
+          }
+        </script>
         <%!-- <.input field={@form[:instructions]} type="textarea" label="Instructions --" /> --%>
         <.inputs_for :let={step} field={@form[:steps]}>
           <div class="mt-2">
@@ -45,10 +87,121 @@ defmodule CookbookWeb.RecipeLive.Form do
     """
   end
 
+  attr :ri, Phoenix.HTML.Form, required: true
+  attr :last?, :boolean, required: true
+  attr :search, :map, doc: "the open ingredient search, if any: `%{index: index, results: [...]}`"
+
+  defp ingredient_row(assigns) do
+    name = assigns.ri[:name]
+    results = if assigns.search[:index] == assigns.ri.index, do: assigns.search.results, else: []
+
+    assigns =
+      assign(assigns,
+        name: name,
+        amount: assigns.ri[:amount],
+        listbox_id: "#{name.id}-options",
+        results: results,
+        name_suggestions: suggestions(assigns.ri, :name),
+        amount_suggestions: suggestions(assigns.ri, :amount)
+      )
+
+    ~H"""
+    <div id={"recipe-ingredient-#{@ri.index}"} class="flex items-start gap-2">
+      <.input field={@ri[:confirmed_name]} type="hidden" />
+      <div class="relative flex-1" data-combobox>
+        <.input
+          field={@name}
+          type="text"
+          placeholder="Ingredient"
+          autocomplete="off"
+          phx-debounce="200"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls={@listbox_id}
+          aria-expanded={to_string(@results != [])}
+        />
+        <ul
+          :if={@results != []}
+          id={@listbox_id}
+          role="listbox"
+          class="absolute inset-x-0 top-11 z-10 max-h-60 overflow-auto rounded-box border border-base-300 bg-base-100 py-1 shadow-lg"
+        >
+          <li
+            :for={ingredient <- @results}
+            id={"#{@name.id}-option-#{ingredient.id}"}
+            role="option"
+            aria-selected="false"
+            data-fill-id={@name.id}
+            data-fill-value={ingredient.name}
+            class="cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-base-200 aria-selected:bg-primary aria-selected:text-primary-content"
+          >
+            {ingredient.name}
+          </li>
+        </ul>
+        <div :for={suggestion <- @name_suggestions} class="-mt-1 mb-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            id={"#{@name.id}-use-suggestion"}
+            class="btn btn-xs btn-primary"
+            data-fill-id={@name.id}
+            data-fill-value={suggestion}
+          >
+            Use {suggestion}
+          </button>
+          <button
+            type="button"
+            id={"#{@name.id}-keep-new"}
+            class="btn btn-xs btn-ghost"
+            data-fill-id={@ri[:confirmed_name].id}
+            data-fill-value={@name.value}
+            data-dispatch-id={@name.id}
+          >
+            Add "{@name.value}" as new ingredient
+          </button>
+        </div>
+      </div>
+      <div class="w-36">
+        <.input field={@amount} type="text" placeholder="250 g" phx-debounce="200" />
+        <button
+          :for={suggestion <- @amount_suggestions}
+          type="button"
+          id={"#{@amount.id}-use-suggestion"}
+          class="btn btn-xs btn-primary -mt-1 mb-2"
+          data-fill-id={@amount.id}
+          data-fill-value={suggestion}
+        >
+          Use {suggestion}
+        </button>
+      </div>
+      <label
+        :if={not @last?}
+        id={"recipe-ingredient-#{@ri.index}-remove"}
+        class="btn btn-ghost btn-square text-base-content/60 transition hover:text-error"
+        title="Remove ingredient"
+      >
+        <input
+          type="checkbox"
+          name="recipe[recipe_ingredients_drop][]"
+          value={@ri.index}
+          class="hidden"
+        />
+        <.icon name="hero-x-mark" class="size-5" />
+      </label>
+      <span :if={@last?} class="w-10 shrink-0"></span>
+    </div>
+    """
+  end
+
+  # The values suggested by "did you mean" errors on a field.
+  defp suggestions(form, field) do
+    for {^field, {_message, opts}} <- form.errors, suggestion = opts[:suggestion], do: suggestion
+  end
+
   @impl true
   def mount(params, _session, socket) do
     socket
     |> assign(:return_to, return_to(params["return_to"]))
+    |> assign(:ingredient_search, nil)
     |> apply_action(socket.assigns.live_action, params)
     |> ok()
   end
@@ -75,16 +228,48 @@ defmodule CookbookWeb.RecipeLive.Form do
   end
 
   @impl true
-  def handle_event("validate", %{"recipe" => recipe_params}, socket) do
+  def handle_event("validate", %{"recipe" => recipe_params} = params, socket) do
     %{current_scope: scope, recipe: recipe} = socket.assigns
     changeset = Recipes.change_recipe(scope, recipe, recipe_params)
 
-    socket |> assign_form(changeset, action: :validate) |> noreply()
+    socket
+    |> assign_form(changeset, action: :validate)
+    |> assign_ingredient_search(params)
+    |> noreply()
   end
 
   def handle_event("save", %{"recipe" => recipe_params}, socket) do
-    save_recipe(socket, socket.assigns.live_action, recipe_params)
+    socket
+    |> assign(:ingredient_search, nil)
+    |> save_recipe(socket.assigns.live_action, recipe_params)
   end
+
+  def handle_event("close_ingredient_search", _params, socket) do
+    socket |> assign(:ingredient_search, nil) |> noreply()
+  end
+
+  # Searches the ingredients while typing an ingredient name. The search is
+  # closed once the name matches an ingredient, or when typing elsewhere.
+  defp assign_ingredient_search(
+         socket,
+         %{"_target" => ["recipe", "recipe_ingredients", index, "name"], "recipe" => params}
+       ) do
+    name = get_in(params, ["recipe_ingredients", index, "name"])
+    results = Recipes.search_ingredients(socket.assigns.current_scope, name || "")
+
+    search =
+      with [_ | _] <- results,
+           false <- Enum.any?(results, &(&1.name == Ingredient.normalize_name(name))),
+           {index, ""} <- Integer.parse(index) do
+        %{index: index, results: results}
+      else
+        _ -> nil
+      end
+
+    assign(socket, :ingredient_search, search)
+  end
+
+  defp assign_ingredient_search(socket, _params), do: assign(socket, :ingredient_search, nil)
 
   defp save_recipe(socket, :edit, recipe_params) do
     case Recipes.update_recipe(socket.assigns.current_scope, socket.assigns.recipe, recipe_params) do
@@ -117,12 +302,14 @@ defmodule CookbookWeb.RecipeLive.Form do
   end
 
   defp assign_form(socket, changeset, opts \\ []) do
-    form =
+    changeset =
       changeset
       |> Recipes.put_empty_last_recipe_step()
-      |> to_form(opts)
+      |> Recipes.put_empty_last_recipe_ingredient()
 
-    assign(socket, :form, form)
+    socket
+    |> assign(:form, to_form(changeset, opts))
+    |> assign(:ingredient_count, length(Recipes.ingredient_rows(changeset)))
   end
 
   defp return_path(_scope, "index", _recipe), do: ~p"/recipes"
