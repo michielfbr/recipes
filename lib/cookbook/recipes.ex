@@ -6,7 +6,7 @@ defmodule Cookbook.Recipes do
   import Ecto.Query, warn: false
   alias Cookbook.Repo
 
-  alias Cookbook.Recipes.Recipe
+  alias Cookbook.Recipes.{Ingredient, Recipe}
   alias Cookbook.Accounts.Scope
 
   @doc """
@@ -188,5 +188,59 @@ defmodule Cookbook.Recipes do
 
   def put_empty_last_recipe_step(%Ecto.Changeset{} = changeset) do
     Recipe.put_empty_last_step(changeset)
+  end
+
+  # `String.jaro_distance/2` from which two ingredient names are considered
+  # similar, e.g. "tomaot" ~ "tomato" (0.94) and "tomato" ~ "tomatoes" (0.92).
+  @similar_jaro_distance 0.9
+  @search_limit 8
+
+  @doc """
+  Searches the ingredients (shared by all users) for the given term.
+
+  Matches are ranked: exact, then names starting with the term, then names
+  with a word starting with it, then names containing it and finally names
+  similar to it (to catch typos and plurals).
+
+  ## Examples
+
+      iex> search_ingredients(scope, "onion")
+      [%Ingredient{name: "onion"}, %Ingredient{name: "red onion"}]
+
+  """
+  def search_ingredients(%Scope{}, term) do
+    case Ingredient.normalize_name(term) do
+      "" ->
+        []
+
+      term ->
+        Ingredient
+        |> Repo.all()
+        |> Enum.flat_map(fn ingredient ->
+          case search_rank(ingredient.name, term) do
+            nil -> []
+            rank -> [{rank, ingredient}]
+          end
+        end)
+        |> Enum.sort_by(&elem(&1, 0))
+        |> Enum.take(@search_limit)
+        |> Enum.map(&elem(&1, 1))
+    end
+  end
+
+  defp search_rank(name, term) do
+    jaro_distance = String.jaro_distance(name, term)
+
+    tier =
+      cond do
+        name == term -> 0
+        String.starts_with?(name, term) -> 1
+        String.contains?(name, " " <> term) -> 2
+        String.contains?(name, term) -> 3
+        jaro_distance >= @similar_jaro_distance -> 4
+        true -> nil
+      end
+
+    tier && {tier, -jaro_distance, name}
   end
 end
