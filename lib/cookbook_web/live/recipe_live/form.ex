@@ -48,6 +48,52 @@ defmodule CookbookWeb.RecipeLive.Form do
                   this.pushEvent("close_ingredient_search", {})
                 }
               })
+              this.el.addEventListener("keydown", (e) => this.navigate(e))
+            },
+            updated() {
+              // the server resets the options, so drop highlights that no longer exist
+              this.el.querySelectorAll("[aria-activedescendant]").forEach((input) => {
+                const option = document.getElementById(input.getAttribute("aria-activedescendant"))
+                if (option?.getAttribute("aria-selected") !== "true") {
+                  input.removeAttribute("aria-activedescendant")
+                }
+              })
+            },
+            // Arrow keys move through the open search results, Enter picks the
+            // highlighted one and Escape closes them.
+            navigate(e) {
+              const input = e.target.closest("[role=combobox]")
+              const listbox = input && document.getElementById(input.getAttribute("aria-controls"))
+              if (!listbox) return
+
+              const options = Array.from(listbox.querySelectorAll("[role=option]"))
+              const current = options.findIndex((o) => o.getAttribute("aria-selected") === "true")
+
+              switch (e.key) {
+                case "ArrowDown":
+                case "ArrowUp": {
+                  e.preventDefault()
+                  const step = e.key === "ArrowDown" ? 1 : -1
+                  const next = current === -1 && step === -1 ? options.length - 1 : current + step
+                  this.highlight(input, options, (next + options.length) % options.length)
+                  break
+                }
+                case "Enter":
+                  if (current !== -1) {
+                    e.preventDefault()
+                    this.fill(options[current])
+                  }
+                  break
+                case "Escape":
+                  e.preventDefault()
+                  this.pushEvent("close_ingredient_search", {})
+                  break
+              }
+            },
+            highlight(input, options, index) {
+              options.forEach((option, i) => option.setAttribute("aria-selected", i === index))
+              input.setAttribute("aria-activedescendant", options[index].id)
+              options[index].scrollIntoView({ block: "nearest" })
             },
             fill(button) {
               const input = document.getElementById(button.dataset.fillId)
