@@ -18,15 +18,14 @@ defmodule Cookbook.Recipes.Amount do
     "l" => ~w(l liter liters litre litres),
     "el" => ~w(el eetlepel eetlepels tbsp tbs tablespoon tablespoons),
     "tl" => ~w(tl theelepel theelepels tsp teaspoon teaspoons),
-    "kl" => ~w(kl koffielepel koffielepels),
     "kop" => ~w(kop kopje kopjes koppen cup cups),
     "snufje" => ~w(snufje snufjes snuf pinch),
     "teen" => ~w(teen teentje teentjes tenen clove cloves),
     "blik" => ~w(blik blikje blikjes blikken can cans tin tins),
-    "stuk" => ~w(stuk stuks stukje stukjes piece pieces),
+    "stuks" => ~w(stuks stuk piece pieces),
     "bos" => ~w(bos bosje bosjes bunch),
     "plak" => ~w(plak plakje plakjes slice slices),
-    "handje" => ~w(handje handjes handvol handful)
+    "hand" => ~w(hand handje handjes handvol handful)
   }
   @unit_aliases for {unit, aliases} <- @units, alias <- aliases, into: %{}, do: {alias, unit}
 
