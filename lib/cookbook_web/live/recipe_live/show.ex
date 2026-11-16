@@ -32,10 +32,12 @@ defmodule CookbookWeb.RecipeLive.Show do
         </li>
       </ul>
       <%= for step <- @recipe.steps do %>
-        <h4>Step {step.no}</h4>
+        <h4 id={"step-label-#{step.no}"} class="text-sm text-base-content/60">Step {step.no}</h4>
         <p>{step.instructions}</p>
       <% end %>
-      <p>Source: {@recipe.source}</p>
+      <p>
+        <span id="source-label" class="text-sm text-base-content/60">Source:</span> {@recipe.source}
+      </p>
     </Layouts.app>
     """
   end

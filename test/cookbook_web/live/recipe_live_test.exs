@@ -185,6 +185,13 @@ defmodule CookbookWeb.RecipeLiveTest do
       refute has_element?(show_live, "header h1", "Recipe #{recipe.id}")
     end
 
+    test "renders step and source labels in a muted style", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert has_element?(show_live, "#step-label-1.text-sm.text-base-content\\/60", "Step 1")
+      assert has_element?(show_live, "#source-label.text-sm.text-base-content\\/60", "Source:")
+    end
+
     test "lists the ingredients with their amounts", %{conn: conn, scope: scope} do
       recipe =
         recipe_fixture(scope, %{
