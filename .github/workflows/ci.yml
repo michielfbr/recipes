@@ -60,6 +60,9 @@ jobs:
       - name: Check for unused locked dependencies
         run: mix deps.unlock --check-unused
 
+      - name: Check formatting
+        run: mix format --check-formatted
+
       - name: Compile (warnings as errors)
         run: mix compile --warnings-as-errors
 
