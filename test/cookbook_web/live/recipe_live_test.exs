@@ -143,15 +143,35 @@ defmodule CookbookWeb.RecipeLiveTest do
       recipe = recipe_fixture(scope)
       {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
 
+      refute has_element?(form_live, "#confirm-delete-modal")
+      form_live |> element("#delete-recipe") |> render_click()
+      assert has_element?(form_live, "#confirm-delete-modal")
+
       assert {:ok, index_live, _html} =
                form_live
-               |> element("#delete-recipe")
+               |> element("#confirm-delete")
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes")
 
       assert render(index_live) =~ "Recipe deleted successfully"
       refute has_element?(index_live, "#recipes-#{recipe.id}")
       assert_raise Ecto.NoResultsError, fn -> Cookbook.Recipes.get_recipe!(scope, recipe.id) end
+    end
+
+    test "cancelling the delete confirmation keeps the recipe", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope)
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
+
+      form_live |> element("#delete-recipe") |> render_click()
+      form_live |> element("#cancel-delete") |> render_click()
+
+      refute has_element?(form_live, "#confirm-delete-modal")
+      assert Cookbook.Recipes.get_recipe!(scope, recipe.id)
+
+      form_live |> element("#delete-recipe") |> render_click()
+      render_keydown(form_live, "cancel_delete", %{"key" => "Escape"})
+
+      refute has_element?(form_live, "#confirm-delete-modal")
     end
 
     test "has no delete action when creating a recipe", %{conn: conn} do
