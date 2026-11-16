@@ -68,7 +68,8 @@ defmodule CookbookWeb.RecipeLiveTest do
     test "lists all recipes", %{conn: conn, recipe: recipe} do
       {:ok, _index_live, html} = live(conn, ~p"/recipes")
 
-      assert html =~ "Listing Recipes"
+      assert html =~ "Recipes"
+      refute html =~ "Listing Recipes"
       assert html =~ recipe.title
     end
 

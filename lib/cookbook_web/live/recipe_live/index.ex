@@ -8,7 +8,7 @@ defmodule CookbookWeb.RecipeLive.Index do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
-        Listing Recipes
+        Recipes
         <:actions>
           <.button variant="primary" navigate={~p"/recipes/new"}>
             <.icon name="hero-plus" /> New Recipe
@@ -48,7 +48,7 @@ defmodule CookbookWeb.RecipeLive.Index do
     end
 
     socket
-    |> assign(:page_title, "Listing Recipes")
+    |> assign(:page_title, "Recipes")
     |> stream(:recipes, list_recipes(socket.assigns.current_scope))
     |> ok()
   end
