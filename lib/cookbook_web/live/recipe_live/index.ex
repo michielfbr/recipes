@@ -28,14 +28,6 @@ defmodule CookbookWeb.RecipeLive.Index do
           </div>
           <.link navigate={~p"/recipes/#{recipe}/edit"}>Edit</.link>
         </:action>
-        <:action :let={{id, recipe}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: recipe.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        </:action>
       </.table>
     </Layouts.app>
     """
@@ -51,14 +43,6 @@ defmodule CookbookWeb.RecipeLive.Index do
     |> assign(:page_title, "Recipes")
     |> stream(:recipes, list_recipes(socket.assigns.current_scope))
     |> ok()
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    recipe = Recipes.get_recipe!(socket.assigns.current_scope, id)
-    {:ok, _} = Recipes.delete_recipe(socket.assigns.current_scope, recipe)
-
-    socket |> stream_delete(:recipes, recipe) |> noreply()
   end
 
   @impl true
