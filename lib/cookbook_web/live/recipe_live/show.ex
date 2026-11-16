@@ -36,11 +36,28 @@ defmodule CookbookWeb.RecipeLive.Show do
         <p>{step.instructions}</p>
       <% end %>
       <p>
-        <span id="source-label" class="text-sm text-base-content/60">Source:</span> {@recipe.source}
+        <span id="source-label" class="text-sm text-base-content/60">Source:</span>
+        <a
+          :if={source_url(@recipe.source)}
+          id="source-link"
+          href={source_url(@recipe.source)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link link-primary break-all"
+        >
+          {@recipe.source}
+        </a>
+        <span :if={!source_url(@recipe.source)}>{@recipe.source}</span>
       </p>
     </Layouts.app>
     """
   end
+
+  # The URL to link the source to, when it looks like one.
+  defp source_url("http://" <> _ = source), do: source
+  defp source_url("https://" <> _ = source), do: source
+  defp source_url("www." <> _ = source), do: "https://" <> source
+  defp source_url(_source), do: nil
 
   @impl true
   def mount(_params, _session, socket) do

@@ -231,6 +231,27 @@ defmodule CookbookWeb.RecipeLiveTest do
       refute has_element?(show_live, "header h1", "Recipe #{recipe.id}")
     end
 
+    test "links a source that is a URL, opening in a new tab", %{conn: conn, scope: scope} do
+      for {source, href} <- [
+            {"https://example.com/soup", "https://example.com/soup"},
+            {"http://example.com/soup", "http://example.com/soup"},
+            {"www.example.com/soup", "https://www.example.com/soup"}
+          ] do
+        recipe = recipe_fixture(scope, %{source: source})
+        {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+        assert has_element?(show_live, ~s(a#source-link[href="#{href}"][target="_blank"]), source)
+      end
+    end
+
+    test "shows a source that is not a URL as plain text", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope, %{source: "Grandma's cookbook"})
+      {:ok, show_live, html} = live(conn, ~p"/recipes/#{recipe}")
+
+      refute has_element?(show_live, "#source-link")
+      assert html =~ "Grandma&#39;s cookbook"
+    end
+
     test "renders step and source labels in a muted style", %{conn: conn, recipe: recipe} do
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
