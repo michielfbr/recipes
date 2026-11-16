@@ -41,6 +41,9 @@
       </ul>
       <ul class="menu menu-horizontal flex items-center gap-4">
         <%= if @current_scope do %>
+          <li id="theme-toggle">
+            <.theme_toggle />
+          </li>
           <li>
             {@current_scope.user.email}
           </li>

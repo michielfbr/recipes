@@ -9,5 +9,20 @@ defmodule CookbookWeb.LayoutsTest do
 
       assert [_] = document |> LazyHTML.query("a#home-link[href='/recipes']") |> Enum.to_list()
     end
+
+    test "has exactly one theme toggle, in the top bar", %{conn: conn} do
+      document = conn |> get(~p"/recipes") |> html_response(200) |> LazyHTML.from_document()
+
+      assert [_] = document |> LazyHTML.query("nav #theme-toggle") |> Enum.to_list()
+      assert [_, _, _] = document |> LazyHTML.query("[data-phx-theme]") |> Enum.to_list()
+    end
+  end
+
+  describe "top bar when logged out" do
+    test "has no theme toggle", %{conn: conn} do
+      document = conn |> get(~p"/users/log-in") |> html_response(200) |> LazyHTML.from_document()
+
+      assert [] = document |> LazyHTML.query("#theme-toggle") |> Enum.to_list()
+    end
   end
 end
