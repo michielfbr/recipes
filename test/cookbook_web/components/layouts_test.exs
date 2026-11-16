@@ -16,6 +16,17 @@ defmodule CookbookWeb.LayoutsTest do
       assert [_] = document |> LazyHTML.query("nav #theme-toggle") |> Enum.to_list()
       assert [_, _, _] = document |> LazyHTML.query("[data-phx-theme]") |> Enum.to_list()
     end
+
+    test "has no Phoenix navbar", %{conn: conn} do
+      document = conn |> get(~p"/recipes") |> html_response(200) |> LazyHTML.from_document()
+
+      assert [] = document |> LazyHTML.query("header.navbar") |> Enum.to_list()
+
+      assert [] =
+               document
+               |> LazyHTML.query("a[href='https://hexdocs.pm/phoenix/overview.html']")
+               |> Enum.to_list()
+    end
   end
 
   describe "top bar when logged out" do
