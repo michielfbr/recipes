@@ -78,7 +78,7 @@ defmodule CookbookWeb.RecipeLiveTest do
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", "New Recipe")
+               |> element("a", ~r/^\s*New\s*$/)
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes/new")
 

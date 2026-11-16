@@ -11,7 +11,7 @@ defmodule CookbookWeb.RecipeLive.Index do
         Recipes
         <:actions>
           <.button variant="primary" navigate={~p"/recipes/new"}>
-            <.icon name="hero-plus" /> New Recipe
+            <.icon name="hero-plus" /> New
           </.button>
         </:actions>
       </.header>
