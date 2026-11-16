@@ -24,4 +24,13 @@ defmodule Cookbook.RecipesFixtures do
     {:ok, recipe} = Cookbook.Recipes.create_recipe(scope, attrs)
     recipe
   end
+
+  @doc """
+  Generate an ingredient.
+  """
+  def ingredient_fixture(name \\ "some ingredient") do
+    %Cookbook.Recipes.Ingredient{}
+    |> Cookbook.Recipes.Ingredient.changeset(%{name: name})
+    |> Cookbook.Repo.insert!()
+  end
 end

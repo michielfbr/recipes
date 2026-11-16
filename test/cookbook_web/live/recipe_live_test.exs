@@ -177,6 +177,20 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ recipe.title
     end
 
+    test "lists the ingredients with their amounts", %{conn: conn, scope: scope} do
+      recipe =
+        recipe_fixture(scope, %{
+          recipe_ingredients: [%{name: "Flour", amount: "500 gram"}, %{name: "salt"}]
+        })
+
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+      [flour, salt] = recipe.recipe_ingredients
+
+      assert show_live |> element("#recipe-ingredient-#{flour.id}") |> render() =~ "500 g"
+      assert show_live |> element("#recipe-ingredient-#{flour.id}") |> render() =~ "flour"
+      assert has_element?(show_live, "#recipe-ingredient-#{salt.id}")
+    end
+
     test "updates recipe and returns to show", %{conn: conn, recipe: recipe} do
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 

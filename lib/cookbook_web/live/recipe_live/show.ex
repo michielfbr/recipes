@@ -22,6 +22,16 @@ defmodule CookbookWeb.RecipeLive.Show do
       </.header>
 
       <h2>{@recipe.title}</h2>
+      <ul :if={@recipe.recipe_ingredients != []} id="recipe-ingredients" class="my-4 space-y-1">
+        <li
+          :for={ri <- @recipe.recipe_ingredients}
+          id={"recipe-ingredient-#{ri.id}"}
+          class="flex gap-3"
+        >
+          <span class="w-24 shrink-0 text-right tabular-nums text-base-content/70">{ri.amount}</span>
+          <span>{ri.name}</span>
+        </li>
+      </ul>
       <%= for step <- @recipe.steps do %>
         <h4>Step {step.no}</h4>
         <p>{step.instructions}</p>
