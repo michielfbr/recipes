@@ -125,6 +125,12 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ "some updated title"
     end
 
+    test "has no table header", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      refute has_element?(index_live, "table thead")
+    end
+
     test "has no delete action", %{conn: conn, recipe: recipe} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 

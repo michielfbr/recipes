@@ -21,7 +21,7 @@ defmodule CookbookWeb.RecipeLive.Index do
         rows={@streams.recipes}
         row_click={fn {_id, recipe} -> JS.navigate(~p"/recipes/#{recipe}") end}
       >
-        <:col :let={{_id, recipe}} label="Title">{recipe.title}</:col>
+        <:col :let={{_id, recipe}}>{recipe.title}</:col>
         <:action :let={{_id, recipe}}>
           <div class="sr-only">
             <.link navigate={~p"/recipes/#{recipe}"}>Show</.link>
