@@ -211,7 +211,7 @@ defmodule CookbookWeb.RecipeLiveTest do
 
       assert {:ok, form_live, _} =
                show_live
-               |> element("a", "Edit")
+               |> element("a", ~r/^\s*Edit\s*$/)
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes/#{recipe}/edit?return_to=show")
 

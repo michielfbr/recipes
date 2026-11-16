@@ -16,7 +16,7 @@ defmodule CookbookWeb.RecipeLive.Show do
             <.icon name="hero-arrow-left" />
           </.button>
           <.button variant="primary" navigate={~p"/recipes/#{@recipe}/edit?return_to=show"}>
-            <.icon name="hero-pencil-square" /> Edit recipe
+            <.icon name="hero-pencil-square" /> Edit
           </.button>
         </:actions>
       </.header>
