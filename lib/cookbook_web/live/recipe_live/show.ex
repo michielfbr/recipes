@@ -10,7 +10,7 @@ defmodule CookbookWeb.RecipeLive.Show do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
-        Recipe {@recipe.id}
+        {@recipe.title}
         <:actions>
           <.button navigate={~p"/recipes"}>
             <.icon name="hero-arrow-left" />
@@ -21,7 +21,6 @@ defmodule CookbookWeb.RecipeLive.Show do
         </:actions>
       </.header>
 
-      <h2>{@recipe.title}</h2>
       <ul :if={@recipe.recipe_ingredients != []} id="recipe-ingredients" class="my-4 space-y-1">
         <li
           :for={ri <- @recipe.recipe_ingredients}

@@ -178,6 +178,13 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ recipe.title
     end
 
+    test "uses the recipe title as the page header", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert show_live |> element("header h1") |> render() =~ recipe.title
+      refute has_element?(show_live, "header h1", "Recipe #{recipe.id}")
+    end
+
     test "lists the ingredients with their amounts", %{conn: conn, scope: scope} do
       recipe =
         recipe_fixture(scope, %{
