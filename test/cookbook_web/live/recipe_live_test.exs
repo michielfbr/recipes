@@ -139,6 +139,27 @@ defmodule CookbookWeb.RecipeLiveTest do
   end
 
   describe "Form" do
+    test "deletes the recipe from the edit page", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope)
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
+
+      assert {:ok, index_live, _html} =
+               form_live
+               |> element("#delete-recipe")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/recipes")
+
+      assert render(index_live) =~ "Recipe deleted successfully"
+      refute has_element?(index_live, "#recipes-#{recipe.id}")
+      assert_raise Ecto.NoResultsError, fn -> Cookbook.Recipes.get_recipe!(scope, recipe.id) end
+    end
+
+    test "has no delete action when creating a recipe", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
+
+      refute has_element?(form_live, "#delete-recipe")
+    end
+
     test "shows an error when saving without any filled in step", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
 

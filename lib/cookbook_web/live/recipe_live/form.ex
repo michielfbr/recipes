@@ -124,9 +124,18 @@ defmodule CookbookWeb.RecipeLive.Form do
           {msg}
         </p>
         <.input field={@form[:source]} type="text" label="Source" />
-        <footer>
+        <footer class="flex items-center gap-2">
           <.button phx-disable-with="Saving..." variant="primary">Save Recipe</.button>
           <.button navigate={return_path(@current_scope, @return_to, @recipe)}>Cancel</.button>
+          <button
+            :if={@live_action == :edit}
+            type="button"
+            id="delete-recipe"
+            phx-click="delete"
+            class="btn btn-ghost ml-auto text-error transition-colors hover:bg-error/10"
+          >
+            <.icon name="hero-trash" class="size-4" /> Delete
+          </button>
         </footer>
       </.form>
     </Layouts.app>
@@ -288,6 +297,15 @@ defmodule CookbookWeb.RecipeLive.Form do
     socket
     |> assign(:ingredient_search, nil)
     |> save_recipe(socket.assigns.live_action, recipe_params)
+  end
+
+  def handle_event("delete", _params, %{assigns: %{live_action: :edit}} = socket) do
+    {:ok, _} = Recipes.delete_recipe(socket.assigns.current_scope, socket.assigns.recipe)
+
+    socket
+    |> put_flash(:info, "Recipe deleted successfully")
+    |> push_navigate(to: ~p"/recipes")
+    |> noreply()
   end
 
   def handle_event("close_ingredient_search", _params, socket) do
