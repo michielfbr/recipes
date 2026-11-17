@@ -124,11 +124,67 @@ defmodule CookbookWeb.RecipeLive.Form do
           {msg}
         </p>
         <.input field={@form[:source]} type="text" label="Source" />
-        <footer>
+        <footer class="flex items-center gap-2">
           <.button phx-disable-with="Saving..." variant="primary">Save Recipe</.button>
           <.button navigate={return_path(@current_scope, @return_to, @recipe)}>Cancel</.button>
+          <button
+            :if={@live_action == :edit}
+            type="button"
+            id="delete-recipe"
+            phx-click="confirm_delete"
+            class="btn btn-ghost ml-auto text-error transition-colors hover:bg-error/10"
+          >
+            <.icon name="hero-trash" class="size-4" /> Delete
+          </button>
         </footer>
       </.form>
+
+      <div
+        :if={@confirm_delete?}
+        id="confirm-delete-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-delete-title"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity duration-150 starting:opacity-0"
+        phx-window-keydown="cancel_delete"
+        phx-key="Escape"
+      >
+        <div
+          class="w-full max-w-sm rounded-box bg-base-100 p-6 shadow-xl transition duration-150 starting:scale-95 starting:opacity-0"
+          phx-click-away="cancel_delete"
+        >
+          <div class="flex items-start gap-4">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-error/10">
+              <.icon name="hero-exclamation-triangle" class="size-5 text-error" />
+            </div>
+            <div>
+              <h2 id="confirm-delete-title" class="text-base font-semibold">{@recipe.title}</h2>
+              <p class="mt-1 text-sm text-base-content/70">
+                This recipe will be permanently deleted. Are you sure?
+              </p>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              id="cancel-delete"
+              phx-click="cancel_delete"
+              class="btn btn-ghost"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              id="confirm-delete"
+              phx-click="delete"
+              phx-disable-with="Deleting..."
+              class="btn btn-error"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -248,6 +304,7 @@ defmodule CookbookWeb.RecipeLive.Form do
     socket
     |> assign(:return_to, return_to(params["return_to"]))
     |> assign(:ingredient_search, nil)
+    |> assign(:confirm_delete?, false)
     |> apply_action(socket.assigns.live_action, params)
     |> ok()
   end
@@ -288,6 +345,23 @@ defmodule CookbookWeb.RecipeLive.Form do
     socket
     |> assign(:ingredient_search, nil)
     |> save_recipe(socket.assigns.live_action, recipe_params)
+  end
+
+  def handle_event("confirm_delete", _params, %{assigns: %{live_action: :edit}} = socket) do
+    socket |> assign(:confirm_delete?, true) |> noreply()
+  end
+
+  def handle_event("cancel_delete", _params, socket) do
+    socket |> assign(:confirm_delete?, false) |> noreply()
+  end
+
+  def handle_event("delete", _params, %{assigns: %{live_action: :edit}} = socket) do
+    {:ok, _} = Recipes.delete_recipe(socket.assigns.current_scope, socket.assigns.recipe)
+
+    socket
+    |> put_flash(:info, "Recipe deleted successfully")
+    |> push_navigate(to: ~p"/recipes")
+    |> noreply()
   end
 
   def handle_event("close_ingredient_search", _params, socket) do

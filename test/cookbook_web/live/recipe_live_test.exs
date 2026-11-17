@@ -68,7 +68,8 @@ defmodule CookbookWeb.RecipeLiveTest do
     test "lists all recipes", %{conn: conn, recipe: recipe} do
       {:ok, _index_live, html} = live(conn, ~p"/recipes")
 
-      assert html =~ "Listing Recipes"
+      assert html =~ "Recipes"
+      refute html =~ "Listing Recipes"
       assert html =~ recipe.title
     end
 
@@ -77,7 +78,7 @@ defmodule CookbookWeb.RecipeLiveTest do
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", "New Recipe")
+               |> element("a", ~r/^\s*New\s*$/)
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes/new")
 
@@ -124,15 +125,61 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ "some updated title"
     end
 
-    test "deletes recipe in listing", %{conn: conn, recipe: recipe} do
+    test "has no table header", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
-      assert index_live |> element("#recipes-#{recipe.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#recipes-#{recipe.id}")
+      refute has_element?(index_live, "table thead")
+    end
+
+    test "has no delete action", %{conn: conn, recipe: recipe} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      refute has_element?(index_live, "#recipes-#{recipe.id} a", "Delete")
     end
   end
 
   describe "Form" do
+    test "deletes the recipe from the edit page", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope)
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
+
+      refute has_element?(form_live, "#confirm-delete-modal")
+      form_live |> element("#delete-recipe") |> render_click()
+      assert has_element?(form_live, "#confirm-delete-modal")
+
+      assert {:ok, index_live, _html} =
+               form_live
+               |> element("#confirm-delete")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/recipes")
+
+      assert render(index_live) =~ "Recipe deleted successfully"
+      refute has_element?(index_live, "#recipes-#{recipe.id}")
+      assert_raise Ecto.NoResultsError, fn -> Cookbook.Recipes.get_recipe!(scope, recipe.id) end
+    end
+
+    test "cancelling the delete confirmation keeps the recipe", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope)
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
+
+      form_live |> element("#delete-recipe") |> render_click()
+      form_live |> element("#cancel-delete") |> render_click()
+
+      refute has_element?(form_live, "#confirm-delete-modal")
+      assert Cookbook.Recipes.get_recipe!(scope, recipe.id)
+
+      form_live |> element("#delete-recipe") |> render_click()
+      render_keydown(form_live, "cancel_delete", %{"key" => "Escape"})
+
+      refute has_element?(form_live, "#confirm-delete-modal")
+    end
+
+    test "has no delete action when creating a recipe", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
+
+      refute has_element?(form_live, "#delete-recipe")
+    end
+
     test "shows an error when saving without any filled in step", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
 
@@ -177,6 +224,41 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ recipe.title
     end
 
+    test "uses the recipe title as the page header", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert show_live |> element("header h1") |> render() =~ recipe.title
+      refute has_element?(show_live, "header h1", "Recipe #{recipe.id}")
+    end
+
+    test "links a source that is a URL, opening in a new tab", %{conn: conn, scope: scope} do
+      for {source, href} <- [
+            {"https://example.com/soup", "https://example.com/soup"},
+            {"http://example.com/soup", "http://example.com/soup"},
+            {"www.example.com/soup", "https://www.example.com/soup"}
+          ] do
+        recipe = recipe_fixture(scope, %{source: source})
+        {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+        assert has_element?(show_live, ~s(a#source-link[href="#{href}"][target="_blank"]), source)
+      end
+    end
+
+    test "shows a source that is not a URL as plain text", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope, %{source: "Grandma's cookbook"})
+      {:ok, show_live, html} = live(conn, ~p"/recipes/#{recipe}")
+
+      refute has_element?(show_live, "#source-link")
+      assert html =~ "Grandma&#39;s cookbook"
+    end
+
+    test "renders step and source labels in a muted style", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert has_element?(show_live, "#step-label-1.text-sm.text-base-content\\/60", "Step 1")
+      assert has_element?(show_live, "#source-label.text-sm.text-base-content\\/60", "Source:")
+    end
+
     test "lists the ingredients with their amounts", %{conn: conn, scope: scope} do
       recipe =
         recipe_fixture(scope, %{
@@ -196,7 +278,7 @@ defmodule CookbookWeb.RecipeLiveTest do
 
       assert {:ok, form_live, _} =
                show_live
-               |> element("a", "Edit")
+               |> element("a", ~r/^\s*Edit\s*$/)
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes/#{recipe}/edit?return_to=show")
 
