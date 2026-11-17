@@ -110,7 +110,7 @@ defmodule CookbookWeb.RecipeLive.FormIngredientsTest do
                save(view, %{"0" => %{name: "Leek", amount: "2 stuks"}})
 
       assert [recipe] = Recipes.list_recipes(scope)
-      assert [%{name: "leek", amount: "2 stuk"}] = recipe.recipe_ingredients
+      assert [%{name: "leek", amount: "2 stuks"}] = recipe.recipe_ingredients
     end
 
     test "asks to confirm names similar to an existing ingredient", %{conn: conn, scope: scope} do

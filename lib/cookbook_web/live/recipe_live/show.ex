@@ -11,18 +11,17 @@ defmodule CookbookWeb.RecipeLive.Show do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
-        Recipe {@recipe.id}
+        {@recipe.title}
         <:actions>
           <.button navigate={~p"/recipes"}>
             <.icon name="hero-arrow-left" />
           </.button>
           <.button variant="primary" navigate={~p"/recipes/#{@recipe}/edit?return_to=show"}>
-            <.icon name="hero-pencil-square" /> Edit recipe
+            <.icon name="hero-pencil-square" /> Edit
           </.button>
         </:actions>
       </.header>
 
-      <h2>{@recipe.title}</h2>
       <p :if={@recipe.cooking_time} id="recipe-cooking-time" class="flex items-center gap-1.5">
         <.icon name="hero-clock" class="size-5 text-base-content/70" />
         <span class="tabular-nums">{CookingTime.format(@recipe.cooking_time)}</span>
@@ -38,13 +37,32 @@ defmodule CookbookWeb.RecipeLive.Show do
         </li>
       </ul>
       <%= for step <- @recipe.steps do %>
-        <h4>Step {step.no}</h4>
+        <h4 id={"step-label-#{step.no}"} class="text-sm text-base-content/60">Step {step.no}</h4>
         <p>{step.instructions}</p>
       <% end %>
-      <p>Source: {@recipe.source}</p>
+      <p>
+        <span id="source-label" class="text-sm text-base-content/60">Source:</span>
+        <a
+          :if={source_url(@recipe.source)}
+          id="source-link"
+          href={source_url(@recipe.source)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link link-primary break-all"
+        >
+          {@recipe.source}
+        </a>
+        <span :if={!source_url(@recipe.source)}>{@recipe.source}</span>
+      </p>
     </Layouts.app>
     """
   end
+
+  # The URL to link the source to, when it looks like one.
+  defp source_url("http://" <> _ = source), do: source
+  defp source_url("https://" <> _ = source), do: source
+  defp source_url("www." <> _ = source), do: "https://" <> source
+  defp source_url(_source), do: nil
 
   @impl true
   def mount(_params, _session, socket) do

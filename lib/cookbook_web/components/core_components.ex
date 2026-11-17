@@ -361,7 +361,7 @@ defmodule CookbookWeb.CoreComponents do
 
     ~H"""
     <table class="table table-zebra">
-      <thead>
+      <thead :if={Enum.any?(@col, & &1[:label])}>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
           <th :if={@action != []}>

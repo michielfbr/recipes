@@ -8,10 +8,10 @@ defmodule CookbookWeb.RecipeLive.Index do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
-        Listing Recipes
+        Recipes
         <:actions>
           <.button variant="primary" navigate={~p"/recipes/new"}>
-            <.icon name="hero-plus" /> New Recipe
+            <.icon name="hero-plus" /> New
           </.button>
         </:actions>
       </.header>
@@ -21,20 +21,12 @@ defmodule CookbookWeb.RecipeLive.Index do
         rows={@streams.recipes}
         row_click={fn {_id, recipe} -> JS.navigate(~p"/recipes/#{recipe}") end}
       >
-        <:col :let={{_id, recipe}} label="Title">{recipe.title}</:col>
+        <:col :let={{_id, recipe}}>{recipe.title}</:col>
         <:action :let={{_id, recipe}}>
           <div class="sr-only">
             <.link navigate={~p"/recipes/#{recipe}"}>Show</.link>
           </div>
           <.link navigate={~p"/recipes/#{recipe}/edit"}>Edit</.link>
-        </:action>
-        <:action :let={{id, recipe}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: recipe.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
         </:action>
       </.table>
     </Layouts.app>
@@ -48,17 +40,9 @@ defmodule CookbookWeb.RecipeLive.Index do
     end
 
     socket
-    |> assign(:page_title, "Listing Recipes")
+    |> assign(:page_title, "Recipes")
     |> stream(:recipes, list_recipes(socket.assigns.current_scope))
     |> ok()
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    recipe = Recipes.get_recipe!(socket.assigns.current_scope, id)
-    {:ok, _} = Recipes.delete_recipe(socket.assigns.current_scope, recipe)
-
-    socket |> stream_delete(:recipes, recipe) |> noreply()
   end
 
   @impl true
