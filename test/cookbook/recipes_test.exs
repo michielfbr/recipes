@@ -54,6 +54,18 @@ defmodule Cookbook.RecipesTest do
       assert Enum.map(recipe.steps, &Map.take(&1, [:no, :instructions])) == valid_attrs.steps
     end
 
+    test "create_recipe/2 stores the cooking time in minutes" do
+      scope = user_scope_fixture()
+
+      assert {:ok, %Recipe{cooking_time: 90}} =
+               Recipes.create_recipe(scope, recipe_attrs(%{cooking_time: "1:30"}))
+
+      assert {:error, changeset} =
+               Recipes.create_recipe(scope, recipe_attrs(%{cooking_time: "1:75"}))
+
+      assert %{cooking_time: [_]} = errors_on(changeset)
+    end
+
     test "create_recipe/2 with invalid data returns error changeset" do
       scope = user_scope_fixture()
       assert {:error, %Ecto.Changeset{}} = Recipes.create_recipe(scope, @invalid_attrs)
