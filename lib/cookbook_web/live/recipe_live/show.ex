@@ -2,6 +2,7 @@ defmodule CookbookWeb.RecipeLive.Show do
   use CookbookWeb, :live_view
 
   alias Cookbook.Recipes
+  alias Cookbook.Recipes.CookingTime
 
   on_mount CookbookWeb.RecipeLive.LoadRecipe
 
@@ -21,6 +22,10 @@ defmodule CookbookWeb.RecipeLive.Show do
         </:actions>
       </.header>
 
+      <p :if={@recipe.cooking_time} id="recipe-cooking-time" class="flex items-center gap-1.5">
+        <.icon name="hero-clock" class="size-5 text-base-content/70" />
+        <span class="tabular-nums">{CookingTime.format(@recipe.cooking_time)}</span>
+      </p>
       <ul :if={@recipe.recipe_ingredients != []} id="recipe-ingredients" class="my-4 space-y-1">
         <li
           :for={ri <- @recipe.recipe_ingredients}

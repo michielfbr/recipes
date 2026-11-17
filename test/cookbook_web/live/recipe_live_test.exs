@@ -193,6 +193,26 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert has_element?(form_live, "#recipe_steps_0_instructions")
     end
 
+    test "edits the cooking time as hours and minutes", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope, %{cooking_time: "8:35"})
+
+      {:ok, form_live, _html} = live(conn, ~p"/recipes/#{recipe}/edit")
+
+      assert has_element?(form_live, "#recipe_cooking_time[value='8:35']")
+
+      assert form_live
+             |> form("#recipe-form", recipe: %{cooking_time: "8:5"})
+             |> render_change() =~ "must be minutes or hours:minutes"
+
+      assert has_element?(form_live, "#recipe_cooking_time[value='8:5']")
+
+      form_live
+      |> form("#recipe-form", recipe: %{cooking_time: "90"})
+      |> render_change()
+
+      assert has_element?(form_live, "#recipe_cooking_time[value='1:30']")
+    end
+
     test "keeps one empty step at the end while typing", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/recipes/new")
 
@@ -222,6 +242,20 @@ defmodule CookbookWeb.RecipeLiveTest do
 
       assert html =~ "Show Recipe"
       assert html =~ recipe.title
+    end
+
+    test "shows the cooking time as hours and minutes", %{conn: conn, scope: scope} do
+      recipe = recipe_fixture(scope, %{cooking_time: "0:20"})
+
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert show_live |> element("#recipe-cooking-time") |> render() =~ "0:20"
+    end
+
+    test "hides the cooking time when there is none", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      refute has_element?(show_live, "#recipe-cooking-time")
     end
 
     test "uses the recipe title as the page header", %{conn: conn, recipe: recipe} do

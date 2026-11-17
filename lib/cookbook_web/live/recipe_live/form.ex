@@ -2,6 +2,7 @@ defmodule CookbookWeb.RecipeLive.Form do
   use CookbookWeb, :live_view
 
   alias Cookbook.Recipes
+  alias Cookbook.Recipes.CookingTime
   alias Cookbook.Recipes.Ingredient
 
   on_mount CookbookWeb.RecipeLive.LoadRecipe
@@ -17,8 +18,19 @@ defmodule CookbookWeb.RecipeLive.Form do
 
       <.form for={@form} id="recipe-form" phx-change="validate" phx-submit="save">
         <.input field={@form[:title]} type="text" label="Title" />
+        <div class="w-36">
+          <.input
+            field={@form[:cooking_time]}
+            value={CookingTime.format(@form[:cooking_time].value)}
+            type="text"
+            label="Cooking time"
+            placeholder="1:30"
+            inputmode="numeric"
+            phx-debounce="blur"
+          />
+        </div>
         <section id="recipe-ingredients" phx-hook=".IngredientRows" class="mt-2 mb-4">
-          <h2 class="label mb-1">Ingredients</h2>
+          <h2 class="label mb-1 text-xs">Ingredients</h2>
           <.inputs_for :let={ri} field={@form[:recipe_ingredients]}>
             <.ingredient_row
               ri={ri}

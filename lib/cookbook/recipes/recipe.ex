@@ -2,12 +2,14 @@ defmodule Cookbook.Recipes.Recipe do
   use Ecto.Schema
   import Ecto.Changeset
   alias Cookbook.Accounts.User
+  alias Cookbook.Recipes.CookingTime
   alias Cookbook.Recipes.RecipeIngredient
   alias Cookbook.Recipes.Recipe.Step
 
   schema "recipes" do
     field :title, :string
     field :source, :string
+    field :cooking_time, CookingTime
     embeds_many :steps, Step, on_replace: :delete
 
     has_many :recipe_ingredients, RecipeIngredient,
@@ -22,7 +24,7 @@ defmodule Cookbook.Recipes.Recipe do
   @doc false
   def changeset(recipe, attrs, user_scope) do
     recipe
-    |> cast(attrs, [:title, :source])
+    |> cast(attrs, [:title, :source, :cooking_time])
     |> cast_embed(:steps, required: true, with: &Step.changeset/3)
     |> cast_assoc(:recipe_ingredients,
       with: &RecipeIngredient.changeset/3,
