@@ -158,9 +158,9 @@ defmodule CookbookWeb.RecipeLive.Form do
               <.icon name="hero-exclamation-triangle" class="size-5 text-error" />
             </div>
             <div>
-              <h2 id="confirm-delete-title" class="text-base font-semibold">Delete recipe?</h2>
+              <h2 id="confirm-delete-title" class="text-base font-semibold">{@recipe.title}</h2>
               <p class="mt-1 text-sm text-base-content/70">
-                "{@recipe.title}" will be permanently deleted. This can't be undone.
+                This recipe will be permanently deleted. Are you sure?
               </p>
             </div>
           </div>
