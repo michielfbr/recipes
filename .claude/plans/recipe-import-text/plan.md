@@ -111,6 +111,7 @@ Edit `lib/cookbook_web/live/recipe_live/index.ex`.
 - [ ] The modal closes on Escape, on a click outside it and with a close button.
 - [ ] There's no modal component in `core_components.ex`, so write a small one using Tailwind only, without daisyUI. Part 2 reuses it.
 - [ ] Tests: the modal and both options are present, and each option links to the right route.
+- [ ] Add the `/recipes/import` route from step 4 here already, so the "From text" card works. Until step 4, `:import` shows the empty form like `:new`.
 
 ### Step 4: Import action on the recipe form
 
@@ -120,6 +121,7 @@ Edit `lib/cookbook_web/router.ex` and `lib/cookbook_web/live/recipe_live/form.ex
 - [ ] Add `apply_action(socket, :import, _params)`:
   - Start from `Recipes.new_recipe/1`, the same as `:new`.
   - Show a text area (`id="import-text-form"`) with a "Read recipe" button instead of the form.
+  - Empty text can't be submitted: the text area is `required`, and the button is disabled while the text is blank (tracked with `phx-change`). `Import.from_text/2` still returns `:empty` for whitespace-only text, which `required` lets through.
 - [ ] On submit, run `Import.from_text/2` in the background with `start_async`. While it runs, show "Reading recipe…" with a skeleton or spinner.
 - [ ] When the import succeeds:
   - Build the form with `Recipes.change_recipe(scope, recipe, params)`, then add the empty last step and ingredient rows as the `:new` action does.
@@ -129,7 +131,7 @@ Edit `lib/cookbook_web/router.ex` and `lib/cookbook_web/live/recipe_live/form.ex
 
   | Error | Message |
   |---|---|
-  | `:empty` | "Paste a recipe first." |
+  | `:empty` (only whitespace pasted) | "Paste a recipe first." |
   | `:no_recipe` | "No recipe found in this text." |
   | `:ai_unavailable`, `:ai_failed` | "Reading the recipe failed, try again." |
   | `:no_credits` | "Importing isn't available right now." (log the real reason) |
