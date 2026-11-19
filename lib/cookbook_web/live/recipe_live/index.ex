@@ -35,7 +35,8 @@ defmodule CookbookWeb.RecipeLive.Index do
             for={@url_form}
             id="import-url-form"
             phx-submit="import_url"
-            class="hidden rounded-xl border border-primary/50 bg-primary/5 p-4"
+            phx-hook=".FocusOnShow"
+            class="hidden rounded-xl border border-primary/50 bg-primary/5 p-4 transition duration-200 ease-out starting:-translate-y-1 starting:opacity-0"
           >
             <div class="mb-3 flex items-center gap-4">
               <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-content">
@@ -59,6 +60,17 @@ defmodule CookbookWeb.RecipeLive.Index do
               </.button>
             </div>
           </.form>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".FocusOnShow">
+            // JS.focus can't be used: hiding the clicked card moves the focus to
+            // the body, which stops LiveView from retrying once the form is shown.
+            export default {
+              mounted() {
+                this.el.addEventListener("phx:show-end", () => {
+                  this.el.querySelector("input:not([type=hidden])")?.focus()
+                })
+              },
+            }
+          </script>
           <.new_recipe_option
             id="new-from-text"
             navigate={~p"/recipes/import"}
@@ -148,13 +160,9 @@ defmodule CookbookWeb.RecipeLive.Index do
 
   defp show_url_form do
     JS.hide(to: "#new-from-website")
-    |> JS.show(
-      to: "#import-url-form",
-      time: 200,
-      transition:
-        {"ease-out duration-200", "opacity-0 -translate-y-1", "opacity-100 translate-y-0"}
-    )
-    |> JS.focus(to: "#import-url-input")
+    # The form animates in with CSS `starting:` classes, and its
+    # .FocusOnShow hook focuses the URL field.
+    |> JS.show(to: "#import-url-form")
   end
 
   @impl true

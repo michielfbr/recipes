@@ -140,9 +140,9 @@ Edit `lib/cookbook_web/live/recipe_live/form.ex`.
 
 ### Step 7: Polish and finish
 
-- [ ] Check the loading state, the error states and the modal on mobile width.
-- [ ] Manual check with a real API key against the three test sites, including one URL with `utm_` parameters.
-- [ ] Run `mix precommit` and make sure it passes cleanly.
+- [x] Check the loading state, the error states and the modal on mobile width.
+- [x] Manual check with a real API key against the three test sites, including one URL with `utm_` parameters.
+- [x] Run `mix precommit` and make sure it passes cleanly.
 
 ## Out of scope for now
 
