@@ -85,11 +85,11 @@ New module `Cookbook.Recipes.Import.Fetcher` with `fetch(url) :: {:ok, html} | {
 
 New module `Cookbook.Recipes.Import.Extractor` with `extract(html) :: {:ok, {:json_ld | :microdata | :text, content}} | {:error, :no_recipe}`.
 
-- [ ] Move `lazy_html` from `only: :test` to a runtime dependency in `mix.exs`.
-- [ ] Implement extraction steps 1 to 4 from "How it works".
-- [ ] Return `{:error, :no_recipe}` when the result is too short to be a recipe (for example, under 200 characters).
-- [ ] Save fixtures in `test/support/fixtures/recipe_pages/`: `dekrat.html` (JSON-LD) and `picnic.html` (script text). Download them again from the URLs in "Site test results"; the earlier copies were in a temporary folder.
-- [ ] Tests:
+- [x] Move `lazy_html` from `only: :test` to a runtime dependency in `mix.exs`.
+- [x] Implement extraction steps 1 to 4 from "How it works".
+- [x] Return `{:error, :no_recipe}` when the result is too short to be a recipe (for example, under 200 characters).
+- [x] Save fixtures in `test/support/fixtures/recipe_pages/`: `dekrat.html` (JSON-LD) and `picnic.html` (script text). Download them again from the URLs in "Site test results"; the earlier copies were in a temporary folder.
+- [x] Tests:
   - De Krat gives `:json_ld` with 14 ingredients and no image or author fields.
   - Picnic gives `:text` that contains both "chorizoworst" and "Kook ondertussen 300 g fusilli".
   - A page with only navigation gives `:no_recipe`.

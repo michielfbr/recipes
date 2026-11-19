@@ -65,10 +65,10 @@ defmodule Cookbook.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.3.0"},
       {:bandit, "~> 1.5"},
+      {:lazy_html, ">= 0.1.0"},
 
       # Dev & test
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:lazy_html, ">= 0.1.0", only: :test},
       {:assertions, "~> 0.20", only: :test}
     ]
   end
