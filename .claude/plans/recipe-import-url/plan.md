@@ -98,9 +98,9 @@ New module `Cookbook.Recipes.Import.Extractor` with `extract(html) :: {:ok, {:js
 
 Add `from_url(scope, url) :: {:ok, params} | {:error, reason}` to `Cookbook.Recipes.Import` from part 1.
 
-- [ ] The order is: `URL.clean/1`, then `Fetcher.fetch/1`, then `Extractor.extract/1`, then `OpenRouter.extract_recipe/2`. Build the params the same way as `from_text/2`.
-- [ ] Set `"source"` in the params to the cleaned URL, so it's saved with the recipe and shows in the form's source field.
-- [ ] Tests run `from_url/2` end to end with stubbed HTTP and check:
+- [x] The order is: `URL.clean/1`, then `Fetcher.fetch/1`, then `Extractor.extract/1`, then `OpenRouter.extract_recipe/2`. Build the params the same way as `from_text/2`.
+- [x] Set `"source"` in the params to the cleaned URL, so it's saved with the recipe and shows in the form's source field.
+- [x] Tests run `from_url/2` end to end with stubbed HTTP and check:
   - A URL with `utm_` parameters is fetched without them (assert on the request the stub receives).
   - `"source"` holds the cleaned URL.
   - Errors from each stage come through unchanged.
