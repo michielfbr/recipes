@@ -4,6 +4,7 @@ defmodule CookbookWeb.RecipeLive.Form do
   alias Cookbook.Recipes
   alias Cookbook.Recipes.CookingTime
   alias Cookbook.Recipes.Import
+  alias Cookbook.Recipes.Import.URL
   alias Cookbook.Recipes.Ingredient
 
   require Logger
@@ -19,14 +20,24 @@ defmodule CookbookWeb.RecipeLive.Form do
         <:subtitle :if={@import_form}>
           Paste a recipe from a website, email or note. It's translated to Dutch, and you can check it before saving.
         </:subtitle>
-        <:subtitle :if={!@import_form}>
+        <:subtitle :if={@import_host}>
+          The recipe is read from the page and translated to Dutch. You can check it before saving.
+        </:subtitle>
+        <:subtitle :if={!@import_form and !@import_host}>
           Use this form to manage recipe records in your database.
         </:subtitle>
       </.header>
 
       <.import_text :if={@import_form} form={@import_form} reading?={@reading?} error={@import_error} />
+      <.import_url :if={@import_host} host={@import_host} reading?={@reading?} error={@import_error} />
 
-      <.form :if={!@import_form} for={@form} id="recipe-form" phx-change="validate" phx-submit="save">
+      <.form
+        :if={!@import_form and !@import_host}
+        for={@form}
+        id="recipe-form"
+        phx-change="validate"
+        phx-submit="save"
+      >
         <.input field={@form[:title]} type="text" label="Title" />
         <div class="w-36">
           <.input
@@ -353,23 +364,7 @@ defmodule CookbookWeb.RecipeLive.Form do
         </.button>
       </div>
 
-      <div
-        :if={@reading?}
-        id="import-reading"
-        aria-live="polite"
-        class="mb-4 rounded-xl border border-base-300 p-4"
-      >
-        <p class="mb-3 flex items-center gap-2 text-sm font-medium">
-          <.icon name="hero-sparkles" class="size-5 animate-pulse text-primary" /> Reading recipe…
-        </p>
-        <div class="space-y-2 animate-pulse" aria-hidden="true">
-          <div class="h-4 w-1/2 rounded bg-base-300"></div>
-          <div class="h-3 w-1/3 rounded bg-base-200"></div>
-          <div class="h-3 w-2/5 rounded bg-base-200"></div>
-          <div class="h-3 w-5/6 rounded bg-base-200"></div>
-          <div class="h-3 w-3/4 rounded bg-base-200"></div>
-        </div>
-      </div>
+      <.import_reading :if={@reading?}>Reading recipe…</.import_reading>
 
       <footer class="flex items-center gap-2">
         <.button
@@ -389,6 +384,65 @@ defmodule CookbookWeb.RecipeLive.Form do
     """
   end
 
+  attr :host, :string, required: true
+  attr :reading?, :boolean, required: true
+  attr :error, :string, default: nil
+
+  defp import_url(assigns) do
+    ~H"""
+    <div id="import-url">
+      <.import_reading :if={@reading?}>Reading recipe from {@host}…</.import_reading>
+
+      <div
+        :if={@error}
+        id="import-error"
+        role="alert"
+        class="mb-4 rounded-xl border border-error/30 bg-error/5 p-4 transition duration-200 starting:opacity-0"
+      >
+        <p class="flex items-start gap-2 text-sm">
+          <.icon name="hero-exclamation-triangle" class="mt-0.5 size-5 shrink-0 text-error" />
+          <span>
+            {@error}
+            <span class="mt-0.5 block text-base-content/60">{@host}</span>
+          </span>
+        </p>
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+          <.button id="import-paste-text" variant="primary" navigate={~p"/recipes/import"}>
+            <.icon name="hero-clipboard-document-list" class="size-4" /> Paste text instead
+          </.button>
+          <.button id="import-start-from-scratch" navigate={~p"/recipes/new"}>
+            Start from scratch
+          </.button>
+        </div>
+      </div>
+
+      <footer :if={@reading?} class="flex items-center gap-2">
+        <.button navigate={~p"/recipes"}>Cancel</.button>
+      </footer>
+    </div>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  defp import_reading(assigns) do
+    ~H"""
+    <div id="import-reading" aria-live="polite" class="mb-4 rounded-xl border border-base-300 p-4">
+      <p class="mb-3 flex items-center gap-2 text-sm font-medium">
+        <.icon name="hero-sparkles" class="size-5 shrink-0 animate-pulse text-primary" />
+        <span class="min-w-0 truncate">{render_slot(@inner_block)}</span>
+      </p>
+      <div class="space-y-2 animate-pulse" aria-hidden="true">
+        <div class="h-4 w-1/2 rounded bg-base-300"></div>
+        <div class="h-3 w-1/3 rounded bg-base-200"></div>
+        <div class="h-3 w-2/5 rounded bg-base-200"></div>
+        <div class="h-3 w-5/6 rounded bg-base-200"></div>
+        <div class="h-3 w-3/4 rounded bg-base-200"></div>
+      </div>
+    </div>
+    """
+  end
+
   defp blank?(value), do: value in [nil, ""] or String.trim(value) == ""
 
   # The values suggested by "did you mean" errors on a field.
@@ -403,6 +457,7 @@ defmodule CookbookWeb.RecipeLive.Form do
     |> assign(:ingredient_search, nil)
     |> assign(:confirm_delete?, false)
     |> assign(:import_form, nil)
+    |> assign(:import_host, nil)
     |> assign(:reading?, false)
     |> assign(:import_error, nil)
     |> apply_action(socket.assigns.live_action, params)
@@ -428,6 +483,26 @@ defmodule CookbookWeb.RecipeLive.Form do
     |> assign(:page_title, "New Recipe")
     |> assign(:recipe, recipe)
     |> assign_form(Recipes.change_recipe(scope, recipe))
+  end
+
+  # Reads the recipe from the page at `url` right away. Once it's read, the
+  # recipe form is shown filled in, and saving works as for a new recipe.
+  defp apply_action(socket, :import, %{"url" => url} = params) do
+    scope = socket.assigns.current_scope
+    socket = socket |> apply_action(:new, params) |> assign(:page_title, "Import Recipe")
+
+    case URL.clean(url) do
+      {:ok, clean_url} ->
+        socket
+        |> assign(:import_host, URI.parse(clean_url).host)
+        |> assign(:reading?, true)
+        |> start_async(:import, fn -> Import.from_url(scope, clean_url) end)
+
+      {:error, reason} ->
+        socket
+        |> assign(:import_host, String.trim(url))
+        |> import_failed(reason)
+    end
   end
 
   # Asks for the text to import first. Once it's read, the recipe form is shown
@@ -499,6 +574,7 @@ defmodule CookbookWeb.RecipeLive.Form do
     socket
     |> assign(:reading?, false)
     |> assign(:import_form, nil)
+    |> assign(:import_host, nil)
     |> assign_form(Recipes.change_recipe(scope, recipe, recipe_params), action: :validate)
     |> put_flash(:info, "Imported, check everything before saving")
     |> noreply()
@@ -514,18 +590,31 @@ defmodule CookbookWeb.RecipeLive.Form do
   end
 
   defp import_failed(socket, reason) do
+    source = if socket.assigns.import_host, do: :url, else: :text
+
     socket
     |> assign(:reading?, false)
-    |> assign(:import_error, import_error_message(reason))
+    |> assign(:import_error, import_error_message(reason, source))
   end
 
-  defp import_error_message(:empty), do: "Paste a recipe first."
-  defp import_error_message(:no_recipe), do: "No recipe found in this text."
+  defp import_error_message(:empty, _source), do: "Paste a recipe first."
+  defp import_error_message(:no_recipe, :text), do: "No recipe found in this text."
+  defp import_error_message(:no_recipe, :url), do: "No recipe found on this page."
+  defp import_error_message(:invalid_url, _source), do: "That doesn't look like a web address."
 
-  defp import_error_message(reason) when reason in [:ai_unavailable, :ai_failed],
+  defp import_error_message(:blocked, _source),
+    do: "This site doesn't allow importing. Copy the recipe text and use 'From text'."
+
+  defp import_error_message(reason, _source) when reason in [:unreachable, :not_found],
+    do: "Couldn't open this page."
+
+  defp import_error_message(reason, _source) when reason in [:too_large, :not_html],
+    do: "This page can't be imported."
+
+  defp import_error_message(reason, _source) when reason in [:ai_unavailable, :ai_failed],
     do: "Reading the recipe failed, try again."
 
-  defp import_error_message(:no_credits), do: "Importing isn't available right now."
+  defp import_error_message(:no_credits, _source), do: "Importing isn't available right now."
 
   # Searches the ingredients while typing an ingredient name. The search is
   # closed once the name matches an ingredient, or when typing elsewhere.

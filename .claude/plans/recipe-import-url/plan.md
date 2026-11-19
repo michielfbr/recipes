@@ -118,11 +118,11 @@ Edit `lib/cookbook_web/live/recipe_live/index.ex`.
 
 Edit `lib/cookbook_web/live/recipe_live/form.ex`.
 
-- [ ] Add `apply_action(socket, :import, %{"url" => url})` next to the text version from part 1:
+- [x] Add `apply_action(socket, :import, %{"url" => url})` next to the text version from part 1:
   - Run `Import.from_url/2` in the background with `start_async`.
   - While it runs, show "Reading recipe from {host}…" with the same loading state as part 1.
-- [ ] Success works the same as a text import, plus the `source` field is filled with the cleaned URL.
-- [ ] When the import fails, show a message with buttons for **Paste text instead** (goes to `/recipes/import`) and **Start from scratch**:
+- [x] Success works the same as a text import, plus the `source` field is filled with the cleaned URL.
+- [x] When the import fails, show a message with buttons for **Paste text instead** (goes to `/recipes/import`) and **Start from scratch**:
 
   | Error | Message |
   |---|---|
@@ -133,7 +133,7 @@ Edit `lib/cookbook_web/live/recipe_live/form.ex`.
   | `:too_large`, `:not_html` | "This page can't be imported." |
   | AI errors | The same messages as part 1. |
 
-- [ ] Tests use stubbed HTTP and check:
+- [x] Tests use stubbed HTTP and check:
   - The URL import shows the loading state, then a filled form with the cleaned URL in the source field.
   - The 403 path shows the blocked message and the "paste text" button.
   - Saving creates the recipe with `source` set to the cleaned URL, without `utm_` parameters.
