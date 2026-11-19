@@ -327,13 +327,13 @@ defmodule CookbookWeb.RecipeLive.Form do
         field={@form[:text]}
         type="textarea"
         label="Recipe text"
-        rows="14"
+        rows="8"
         required
         readonly={@reading?}
         placeholder="Paste the recipe here: the title, ingredients and steps"
         phx-debounce="200"
         class={[
-          "w-full textarea min-h-64 font-mono text-sm leading-relaxed transition",
+          "w-full textarea sm:min-h-80 font-mono text-sm leading-relaxed transition",
           @reading? && "opacity-60"
         ]}
       />
