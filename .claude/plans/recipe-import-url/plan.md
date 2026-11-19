@@ -56,10 +56,10 @@ Each step ends in a working, tested state. Run `mix precommit` after each step.
 
 New module `Cookbook.Recipes.Import.URL` with `clean(url) :: {:ok, String.t()} | {:error, :invalid_url}`.
 
-- [ ] Trim whitespace and parse with `URI.new/1`. Accept only `http` and `https` URLs with a host; anything else becomes `{:error, :invalid_url}`.
-- [ ] Remove every query parameter whose name starts with `utm_` (for example `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`). Keep all other parameters in their original order. Drop the `?` when no parameters are left.
-- [ ] Keep the path and fragment unchanged.
-- [ ] Tests:
+- [x] Trim whitespace and parse with `URI.new/1`. Accept only `http` and `https` URLs with a host; anything else becomes `{:error, :invalid_url}`.
+- [x] Remove every query parameter whose name starts with `utm_` (for example `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`). Keep all other parameters in their original order. Drop the `?` when no parameters are left.
+- [x] Keep the path and fragment unchanged.
+- [x] Tests:
   - `https://example.com/recept?utm_source=nieuwsbrief&utm_medium=email` becomes `https://example.com/recept`.
   - `https://example.com/recept?id=5&utm_campaign=x&page=2` becomes `https://example.com/recept?id=5&page=2`.
   - A URL without parameters is unchanged.
