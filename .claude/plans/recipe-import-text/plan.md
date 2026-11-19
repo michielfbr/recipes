@@ -80,7 +80,7 @@ New module `Cookbook.AI.OpenRouter` with `extract_recipe(content, opts \\ []) ::
   - `found: false` becomes `{:error, :no_recipe}`.
   - HTTP 402 (out of credits) becomes `{:error, :no_credits}`.
   - HTTP 429 or 5xx becomes `{:error, :ai_unavailable}`.
-  - A missing API key becomes `{:error, :not_configured}`.
+  - A missing API key raises at boot in `config/runtime.exs` (except in tests).
   - Log `usage` (tokens and cost) at debug level, to keep an eye on spending.
 - [ ] Tests use `Req.Test` stubs for a normal response, `found: false`, `finish_reason: "length"`, a 402 and a 503 status, and check that the request body has the configured model and the JSON schema.
 
@@ -132,7 +132,7 @@ Edit `lib/cookbook_web/router.ex` and `lib/cookbook_web/live/recipe_live/form.ex
   | `:empty` | "Paste a recipe first." |
   | `:no_recipe` | "No recipe found in this text." |
   | `:ai_unavailable`, `:ai_failed` | "Reading the recipe failed, try again." |
-  | `:not_configured`, `:no_credits` | "Importing isn't available right now." (log the real reason) |
+  | `:no_credits` | "Importing isn't available right now." (log the real reason) |
 
 - [ ] Saving uses the existing `save_recipe(socket, :new, ...)` path. Let `:import` share it.
 - [ ] Tests use stubbed HTTP and check:

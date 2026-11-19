@@ -27,6 +27,18 @@ end
 config :cookbook, CookbookWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Tests configure a fake key and stub HTTP in config/test.exs.
+if config_env() != :test do
+  config :cookbook, Cookbook.AI.OpenRouter,
+    api_key:
+      System.get_env("OPENROUTER_API_KEY") ||
+        raise("""
+        environment variable OPENROUTER_API_KEY is missing.
+        Create a key at https://openrouter.ai/settings/keys
+        """),
+    model: System.get_env("RECIPE_IMPORT_MODEL", "anthropic/claude-haiku-5.5")
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
