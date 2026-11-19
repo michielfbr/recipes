@@ -69,17 +69,17 @@ New module `Cookbook.Recipes.Import.URL` with `clean(url) :: {:ok, String.t()} |
 
 New module `Cookbook.Recipes.Import.Fetcher` with `fetch(url) :: {:ok, html} | {:error, reason}`. It receives the cleaned URL from step 1.
 
-- [ ] SSRF protection: resolve the host and reject loopback, private, link-local and similar addresses (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`, `fc00::/7`, `fe80::/10`, `0.0.0.0`).
-- [ ] Follow at most 3 redirects by hand (`redirect: false`), checking every new address the same way.
-- [ ] Use a 10-second timeout and a 3 MB size limit (the Picnic page is 763 KB).
-- [ ] Use an honest User-Agent, such as `Cookbook recipe importer`.
-- [ ] Map failures to error reasons:
+- [x] SSRF protection: resolve the host and reject loopback, private, link-local and similar addresses (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`, `fc00::/7`, `fe80::/10`, `0.0.0.0`).
+- [x] Follow at most 3 redirects by hand (`redirect: false`), checking every new address the same way.
+- [x] Use a 10-second timeout and a 3 MB size limit (the Picnic page is 763 KB).
+- [x] Use an honest User-Agent, such as `Cookbook recipe importer`.
+- [x] Map failures to error reasons:
   - `:blocked` (403 or 429)
   - `:not_found` (404)
   - `:unreachable` (DNS failure, timeout or 5xx)
   - `:too_large`
   - `:not_html`
-- [ ] Tests use `Req.Test` stubs and cover: success, a redirect to a private IP being rejected, 403 becoming `:blocked`, and the size limit.
+- [x] Tests use `Req.Test` stubs and cover: success, a redirect to a private IP being rejected, 403 becoming `:blocked`, and the size limit.
 
 ### Step 3: Extract the recipe from HTML
 
