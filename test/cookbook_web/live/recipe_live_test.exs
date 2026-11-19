@@ -73,12 +73,39 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert html =~ recipe.title
     end
 
+    test "New opens a modal with the ways to start a recipe", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      assert has_element?(index_live, "#new-recipe[phx-click]")
+      assert has_element?(index_live, "#new-recipe-modal #new-recipe-modal-close")
+
+      assert has_element?(
+               index_live,
+               ~s(#new-recipe-modal a#new-from-text[href="/recipes/import"])
+             )
+
+      assert has_element?(
+               index_live,
+               ~s(#new-recipe-modal a#new-from-scratch[href="/recipes/new"])
+             )
+    end
+
+    test "From text goes to the import page", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      assert {:ok, _form_live, _html} =
+               index_live
+               |> element("#new-from-text")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/recipes/import")
+    end
+
     test "saves new recipe", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", ~r/^\s*New\s*$/)
+               |> element("#new-from-scratch")
                |> render_click()
                |> follow_redirect(conn, ~p"/recipes/new")
 

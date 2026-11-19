@@ -342,6 +342,13 @@ defmodule CookbookWeb.RecipeLive.Form do
     |> assign_form(Recipes.change_recipe(scope, recipe))
   end
 
+  # Shows the empty form for now; the text to import from comes next.
+  defp apply_action(socket, :import, params) do
+    socket
+    |> apply_action(:new, params)
+    |> assign(:page_title, "Import Recipe")
+  end
+
   @impl true
   def handle_event("validate", %{"recipe" => recipe_params} = params, socket) do
     %{current_scope: scope, recipe: recipe} = socket.assigns
@@ -418,7 +425,7 @@ defmodule CookbookWeb.RecipeLive.Form do
     end
   end
 
-  defp save_recipe(socket, :new, recipe_params) do
+  defp save_recipe(socket, action, recipe_params) when action in [:new, :import] do
     case Recipes.create_recipe(socket.assigns.current_scope, recipe_params) do
       {:ok, recipe} ->
         socket

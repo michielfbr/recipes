@@ -329,6 +329,67 @@ defmodule CookbookWeb.CoreComponents do
   end
 
   @doc """
+  Renders a modal, hidden until opened with `show_modal/2`.
+
+  It closes on Escape, on a click outside it and with its close button.
+
+  ## Examples
+
+      <.button phx-click={show_modal("confirm-modal")}>Open</.button>
+
+      <.modal id="confirm-modal" title="Are you sure?">
+        This is a modal.
+      </.modal>
+  """
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  slot :subtitle
+  slot :inner_block, required: true
+
+  def modal(assigns) do
+    ~H"""
+    <div id={@id} class="relative z-50 hidden">
+      <div
+        id={"#{@id}-bg"}
+        class="fixed inset-0 bg-base-300/60 backdrop-blur-sm transition-opacity"
+        aria-hidden="true"
+      />
+      <div
+        class="fixed inset-0 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={"#{@id}-title"}
+      >
+        <div class="flex min-h-full items-end justify-center p-4 sm:items-center">
+          <.focus_wrap
+            id={"#{@id}-container"}
+            phx-window-keydown={hide_modal(@id)}
+            phx-key="escape"
+            phx-click-away={hide_modal(@id)}
+            class="relative hidden w-full max-w-md rounded-2xl bg-base-100 p-6 shadow-2xl ring-1 ring-base-content/10"
+          >
+            <button
+              type="button"
+              id={"#{@id}-close"}
+              phx-click={hide_modal(@id)}
+              class="absolute right-4 top-4 rounded-full p-1.5 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
+              aria-label="Close"
+            >
+              <.icon name="hero-x-mark" class="size-5" />
+            </button>
+            <h2 id={"#{@id}-title"} class="pr-8 text-lg font-semibold">{@title}</h2>
+            <p :if={@subtitle != []} class="mt-1 text-sm text-base-content/70">
+              {render_slot(@subtitle)}
+            </p>
+            <div class="mt-5">{render_slot(@inner_block)}</div>
+          </.focus_wrap>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
   Renders a table with generic styling.
 
   ## Examples
@@ -466,6 +527,31 @@ defmodule CookbookWeb.CoreComponents do
         {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
+  end
+
+  def show_modal(js \\ %JS{}, id) when is_binary(id) do
+    js
+    |> JS.show(to: "##{id}")
+    |> JS.show(
+      to: "##{id}-bg",
+      time: 300,
+      transition: {"transition-opacity ease-out duration-300", "opacity-0", "opacity-100"}
+    )
+    |> show("##{id}-container")
+    |> JS.add_class("overflow-hidden", to: "body")
+    |> JS.focus_first(to: "##{id}-container")
+  end
+
+  def hide_modal(js \\ %JS{}, id) do
+    js
+    |> JS.hide(
+      to: "##{id}-bg",
+      time: 200,
+      transition: {"transition-opacity ease-in duration-200", "opacity-100", "opacity-0"}
+    )
+    |> hide("##{id}-container")
+    |> JS.hide(to: "##{id}", time: 200, transition: {"block", "block", "hidden"})
+    |> JS.remove_class("overflow-hidden", to: "body")
   end
 
   @doc """
