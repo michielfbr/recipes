@@ -38,6 +38,7 @@ defmodule Cookbook.Recipes.Import.ExtractorTest do
                 "@type" => ["Recipe", "NewsArticle"],
                 "name" => "Soep",
                 "recipeIngredient" => ["1 ui"],
+                "recipeInstructions" => "Kook de ui.",
                 "totalTime" => "PT30M"
               }
             ]
@@ -47,7 +48,12 @@ defmodule Cookbook.Recipes.Import.ExtractorTest do
       assert Extractor.extract(html) ==
                {:ok,
                 {:json_ld,
-                 %{"name" => "Soep", "recipeIngredient" => ["1 ui"], "totalTime" => "PT30M"}}}
+                 %{
+                   "name" => "Soep",
+                   "recipeIngredient" => ["1 ui"],
+                   "recipeInstructions" => ["Kook de ui."],
+                   "totalTime" => "PT30M"
+                 }}}
     end
 
     test "flattens HowToSection and HowToStep instructions to text" do
@@ -72,6 +78,35 @@ defmodule Cookbook.Recipes.Import.ExtractorTest do
 
       assert {:ok, {:json_ld, recipe}} = Extractor.extract(html)
       assert recipe["recipeInstructions"] == ["Deeg:", "Kneed.", "Bak."]
+    end
+
+    test "Boerschappen gives its non-standard steps and yield fields as the standard ones" do
+      assert {:ok, {:json_ld, recipe}} = Extractor.extract(fixture("boerschappen.html"))
+
+      assert recipe["name"] == "Okonomiyaki met gerookte zalm"
+      assert length(recipe["recipeIngredient"]) == 12
+      assert hd(recipe["recipeInstructions"]) =~ "Snijd de prei in dunne ringen"
+      assert Enum.all?(recipe["recipeInstructions"], &is_binary/1)
+      assert recipe["recipeYield"] == 2
+      refute Map.has_key?(recipe, "steps")
+    end
+
+    test "falls back to the page text when the JSON-LD recipe has no steps" do
+      steps =
+        Enum.map_join(
+          1..4,
+          "",
+          &"<li>Stap #{&1}: bak de pannenkoek #{&1} minuten op middelhoog vuur.</li>"
+        )
+
+      html =
+        page("""
+        #{json_ld(%{"@type" => "Recipe", "name" => "Pannenkoeken", "recipeIngredient" => ["250 g bloem"]})}
+        <main><h1>Pannenkoeken</h1><ol>#{steps}</ol></main>
+        """)
+
+      assert {:ok, {:text, text}} = Extractor.extract(html)
+      assert text =~ "- Stap 4: bak de pannenkoek"
     end
 
     test "skips invalid JSON-LD" do

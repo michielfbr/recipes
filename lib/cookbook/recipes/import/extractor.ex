@@ -16,6 +16,12 @@ defmodule Cookbook.Recipes.Import.Extractor do
   """
 
   @json_ld_fields ~w(name recipeIngredient recipeInstructions totalTime cookTime prepTime recipeYield)
+  # Non-standard names some sites use, and the standard field they stand for.
+  @json_ld_aliases [
+    {"steps", "recipeInstructions"},
+    {"step", "recipeInstructions"},
+    {"yield", "recipeYield"}
+  ]
   @microdata_props ~w(name recipeIngredient ingredients recipeInstructions totalTime cookTime prepTime recipeYield)
 
   @removed_tags ~w(script style noscript svg iframe nav header footer aside form template)
@@ -61,8 +67,15 @@ defmodule Cookbook.Recipes.Import.Extractor do
       end
     end)
     |> case do
-      nil -> nil
-      recipe -> {:json_ld, reduce_recipe(recipe)}
+      nil ->
+        nil
+
+      recipe ->
+        # Without steps the recipe is incomplete; the page text has a better chance.
+        case reduce_recipe(recipe) do
+          %{"recipeInstructions" => [_ | _]} = reduced -> {:json_ld, reduced}
+          _no_steps -> nil
+        end
     end
   end
 
@@ -70,7 +83,10 @@ defmodule Cookbook.Recipes.Import.Extractor do
 
   defp find_recipe(%{} = data) do
     if recipe_type?(data["@type"]) and
-         (data["recipeIngredient"] || data["recipeInstructions"]) not in [nil, []] do
+         (data["recipeIngredient"] || data["recipeInstructions"] || data["steps"]) not in [
+           nil,
+           []
+         ] do
       data
     else
       find_recipe(data["@graph"]) || find_recipe(data["mainEntity"])
@@ -88,9 +104,18 @@ defmodule Cookbook.Recipes.Import.Extractor do
 
   defp reduce_recipe(recipe) do
     recipe
+    |> apply_aliases()
     |> Map.take(@json_ld_fields)
     |> Map.update("recipeInstructions", [], &instruction_texts/1)
     |> Map.reject(fn {_field, value} -> value in [nil, "", []] end)
+  end
+
+  defp apply_aliases(recipe) do
+    Enum.reduce(@json_ld_aliases, recipe, fn {alias, field}, recipe ->
+      if recipe[field] in [nil, "", []] and recipe[alias] not in [nil, "", []],
+        do: Map.put(recipe, field, recipe[alias]),
+        else: recipe
+    end)
   end
 
   # Instructions can be a string, HowToStep objects, or HowToSection objects
