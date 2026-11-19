@@ -19,6 +19,7 @@ jobs:
 
     env:
       MIX_ENV: test
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     services:
       postgres:
@@ -44,6 +45,12 @@ jobs:
           elixir-version: "1.20.4"
           otp-version: "28.3"
 
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v4
+
+      - name: Check 1Password login
+        run: op whoami
+
       - name: Cache deps and _build
         uses: actions/cache@v4
         with:
@@ -67,4 +74,4 @@ jobs:
         run: mix compile --warnings-as-errors
 
       - name: Run tests
-        run: mix test
+        run: op run --env-file="./.env" -- mix test --color --trace

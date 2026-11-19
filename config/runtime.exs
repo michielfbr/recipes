@@ -16,6 +16,10 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
+unless System.get_env("ENV_SECRETS_LOADED") == "true" do
+  reraise("Secrets not loaded.\nRun source secrets first.", [])
+end
+
 if System.get_env("PHX_SERVER") do
   config :cookbook, CookbookWeb.Endpoint, server: true
 end
