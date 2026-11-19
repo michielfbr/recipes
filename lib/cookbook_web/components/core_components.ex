@@ -538,7 +538,7 @@ defmodule CookbookWeb.CoreComponents do
       transition: {"transition-opacity ease-out duration-300", "opacity-0", "opacity-100"}
     )
     |> show("##{id}-container")
-    |> JS.add_class("overflow-hidden", to: "body")
+    |> JS.set_attribute({"data-modal-open", ""}, to: "##{id}")
     |> JS.focus_first(to: "##{id}-container")
   end
 
@@ -551,7 +551,7 @@ defmodule CookbookWeb.CoreComponents do
     )
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", time: 200, transition: {"block", "block", "hidden"})
-    |> JS.remove_class("overflow-hidden", to: "body")
+    |> JS.remove_attribute("data-modal-open", to: "##{id}")
   end
 
   @doc """
