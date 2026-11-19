@@ -106,3 +106,9 @@
 }
 
 /* This file is for your main application CSS */
+
+/* Lock page scrolling while a modal is open. Based on the modal being on the
+   page, so the lock is gone as soon as live navigation removes the modal. */
+body:has([data-modal-open]) {
+  overflow: hidden;
+}

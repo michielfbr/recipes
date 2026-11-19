@@ -29,6 +29,12 @@ config :cookbook, Cookbook.Mailer, adapter: Swoosh.Adapters.Test
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
+# Stub OpenRouter HTTP calls with Req.Test
+config :cookbook, Cookbook.AI.OpenRouter,
+  api_key: "test-key",
+  model: "test/model",
+  plug: {Req.Test, Cookbook.AI.OpenRouter}
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
