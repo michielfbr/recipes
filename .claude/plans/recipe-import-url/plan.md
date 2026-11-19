@@ -109,10 +109,10 @@ Add `from_url(scope, url) :: {:ok, params} | {:error, reason}` to `Cookbook.Reci
 
 Edit `lib/cookbook_web/live/recipe_live/index.ex`.
 
-- [ ] Add a **From website** card (`id="new-from-website"`) to the modal from part 1, as the first option.
-- [ ] Clicking it reveals a URL field and an "Import" button in the modal. The field gets focus when it appears.
-- [ ] Submitting goes to `/recipes/import?url=…`.
-- [ ] Tests: the third card is present, and submitting a URL navigates to the import route with the URL.
+- [x] Add a **From website** card (`id="new-from-website"`) to the modal from part 1, as the first option.
+- [x] Clicking it reveals a URL field and an "Import" button in the modal. The field gets focus when it appears.
+- [x] Submitting goes to `/recipes/import?url=…`.
+- [x] Tests: the third card is present, and submitting a URL navigates to the import route with the URL.
 
 ### Step 6: URL import on the recipe form
 
