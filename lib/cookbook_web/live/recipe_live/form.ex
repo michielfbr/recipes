@@ -3,7 +3,10 @@ defmodule CookbookWeb.RecipeLive.Form do
 
   alias Cookbook.Recipes
   alias Cookbook.Recipes.CookingTime
+  alias Cookbook.Recipes.Import
   alias Cookbook.Recipes.Ingredient
+
+  require Logger
 
   on_mount CookbookWeb.RecipeLive.LoadRecipe
 
@@ -13,10 +16,17 @@ defmodule CookbookWeb.RecipeLive.Form do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
         {@page_title}
-        <:subtitle>Use this form to manage recipe records in your database.</:subtitle>
+        <:subtitle :if={@import_form}>
+          Paste a recipe from a website, email or note. It's translated to Dutch, and you can check it before saving.
+        </:subtitle>
+        <:subtitle :if={!@import_form}>
+          Use this form to manage recipe records in your database.
+        </:subtitle>
       </.header>
 
-      <.form for={@form} id="recipe-form" phx-change="validate" phx-submit="save">
+      <.import_text :if={@import_form} form={@import_form} reading?={@reading?} error={@import_error} />
+
+      <.form :if={!@import_form} for={@form} id="recipe-form" phx-change="validate" phx-submit="save">
         <.input field={@form[:title]} type="text" label="Title" />
         <div class="w-36">
           <.input
@@ -306,6 +316,81 @@ defmodule CookbookWeb.RecipeLive.Form do
     """
   end
 
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :reading?, :boolean, required: true
+  attr :error, :string, default: nil
+
+  defp import_text(assigns) do
+    ~H"""
+    <.form for={@form} id="import-text-form" phx-change="import_change" phx-submit="import">
+      <.input
+        field={@form[:text]}
+        type="textarea"
+        label="Recipe text"
+        rows="8"
+        required
+        readonly={@reading?}
+        placeholder="Paste the recipe here: the title, ingredients and steps"
+        phx-debounce="200"
+        class={[
+          "w-full textarea sm:min-h-80 font-mono text-sm leading-relaxed transition",
+          @reading? && "opacity-60"
+        ]}
+      />
+
+      <div
+        :if={@error}
+        id="import-error"
+        role="alert"
+        class="mb-4 flex flex-col gap-3 rounded-xl border border-error/30 bg-error/5 p-4 sm:flex-row sm:items-center"
+      >
+        <p class="flex flex-1 items-center gap-2 text-sm">
+          <.icon name="hero-exclamation-triangle" class="size-5 shrink-0 text-error" />
+          {@error}
+        </p>
+        <.button id="import-start-from-scratch" navigate={~p"/recipes/new"} class="btn btn-sm">
+          Start from scratch
+        </.button>
+      </div>
+
+      <div
+        :if={@reading?}
+        id="import-reading"
+        aria-live="polite"
+        class="mb-4 rounded-xl border border-base-300 p-4"
+      >
+        <p class="mb-3 flex items-center gap-2 text-sm font-medium">
+          <.icon name="hero-sparkles" class="size-5 animate-pulse text-primary" /> Reading recipe…
+        </p>
+        <div class="space-y-2 animate-pulse" aria-hidden="true">
+          <div class="h-4 w-1/2 rounded bg-base-300"></div>
+          <div class="h-3 w-1/3 rounded bg-base-200"></div>
+          <div class="h-3 w-2/5 rounded bg-base-200"></div>
+          <div class="h-3 w-5/6 rounded bg-base-200"></div>
+          <div class="h-3 w-3/4 rounded bg-base-200"></div>
+        </div>
+      </div>
+
+      <footer class="flex items-center gap-2">
+        <.button
+          id="import-submit"
+          variant="primary"
+          disabled={@reading? or blank?(@form[:text].value)}
+        >
+          <%= if @reading? do %>
+            <.icon name="hero-arrow-path" class="size-4 animate-spin" /> Reading…
+          <% else %>
+            <.icon name="hero-sparkles" class="size-4" /> Read recipe
+          <% end %>
+        </.button>
+        <.button navigate={~p"/recipes"}>Cancel</.button>
+      </footer>
+    </.form>
+    """
+  end
+
+  defp blank?(value), do: value in [nil, ""] or String.trim(value) == ""
+
   # The values suggested by "did you mean" errors on a field.
   defp suggestions(form, field) do
     for {^field, {_message, opts}} <- form.errors, suggestion = opts[:suggestion], do: suggestion
@@ -317,6 +402,9 @@ defmodule CookbookWeb.RecipeLive.Form do
     |> assign(:return_to, return_to(params["return_to"]))
     |> assign(:ingredient_search, nil)
     |> assign(:confirm_delete?, false)
+    |> assign(:import_form, nil)
+    |> assign(:reading?, false)
+    |> assign(:import_error, nil)
     |> apply_action(socket.assigns.live_action, params)
     |> ok()
   end
@@ -342,6 +430,15 @@ defmodule CookbookWeb.RecipeLive.Form do
     |> assign_form(Recipes.change_recipe(scope, recipe))
   end
 
+  # Asks for the text to import first. Once it's read, the recipe form is shown
+  # filled in, and saving works as for a new recipe.
+  defp apply_action(socket, :import, params) do
+    socket
+    |> apply_action(:new, params)
+    |> assign(:page_title, "Import Recipe")
+    |> assign(:import_form, to_form(%{"text" => ""}, as: :import))
+  end
+
   @impl true
   def handle_event("validate", %{"recipe" => recipe_params} = params, socket) do
     %{current_scope: scope, recipe: recipe} = socket.assigns
@@ -350,6 +447,21 @@ defmodule CookbookWeb.RecipeLive.Form do
     socket
     |> assign_form(changeset, action: :validate)
     |> assign_ingredient_search(params)
+    |> noreply()
+  end
+
+  def handle_event("import_change", %{"import" => import_params}, socket) do
+    socket |> assign(:import_form, to_form(import_params, as: :import)) |> noreply()
+  end
+
+  def handle_event("import", %{"import" => %{"text" => text} = import_params}, socket) do
+    scope = socket.assigns.current_scope
+
+    socket
+    |> assign(:import_form, to_form(import_params, as: :import))
+    |> assign(:reading?, true)
+    |> assign(:import_error, nil)
+    |> start_async(:import, fn -> Import.from_text(scope, text) end)
     |> noreply()
   end
 
@@ -379,6 +491,41 @@ defmodule CookbookWeb.RecipeLive.Form do
   def handle_event("close_ingredient_search", _params, socket) do
     socket |> assign(:ingredient_search, nil) |> noreply()
   end
+
+  @impl true
+  def handle_async(:import, {:ok, {:ok, recipe_params}}, socket) do
+    %{current_scope: scope, recipe: recipe} = socket.assigns
+
+    socket
+    |> assign(:reading?, false)
+    |> assign(:import_form, nil)
+    |> assign_form(Recipes.change_recipe(scope, recipe, recipe_params), action: :validate)
+    |> put_flash(:info, "Imported, check everything before saving")
+    |> noreply()
+  end
+
+  def handle_async(:import, {:ok, {:error, reason}}, socket) do
+    socket |> import_failed(reason) |> noreply()
+  end
+
+  def handle_async(:import, {:exit, reason}, socket) do
+    Logger.error("Recipe import crashed: #{inspect(reason)}")
+    socket |> import_failed(:ai_failed) |> noreply()
+  end
+
+  defp import_failed(socket, reason) do
+    socket
+    |> assign(:reading?, false)
+    |> assign(:import_error, import_error_message(reason))
+  end
+
+  defp import_error_message(:empty), do: "Paste a recipe first."
+  defp import_error_message(:no_recipe), do: "No recipe found in this text."
+
+  defp import_error_message(reason) when reason in [:ai_unavailable, :ai_failed],
+    do: "Reading the recipe failed, try again."
+
+  defp import_error_message(:no_credits), do: "Importing isn't available right now."
 
   # Searches the ingredients while typing an ingredient name. The search is
   # closed once the name matches an ingredient, or when typing elsewhere.
@@ -418,7 +565,7 @@ defmodule CookbookWeb.RecipeLive.Form do
     end
   end
 
-  defp save_recipe(socket, :new, recipe_params) do
+  defp save_recipe(socket, action, recipe_params) when action in [:new, :import] do
     case Recipes.create_recipe(socket.assigns.current_scope, recipe_params) do
       {:ok, recipe} ->
         socket

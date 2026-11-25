@@ -57,6 +57,7 @@ defmodule CookbookWeb.Router do
 
       live "/recipes", RecipeLive.Index, :index
       live "/recipes/new", RecipeLive.Form, :new
+      live "/recipes/import", RecipeLive.Form, :import
       live "/recipes/:id", RecipeLive.Show, :show
       live "/recipes/:id/edit", RecipeLive.Form, :edit
     end
