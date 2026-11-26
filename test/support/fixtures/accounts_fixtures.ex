@@ -28,17 +28,10 @@ defmodule Cookbook.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
-    user = unconfirmed_user_fixture(attrs)
-
-    token =
-      extract_user_token(fn url ->
-        Accounts.deliver_login_instructions(user, url)
-      end)
-
-    {:ok, {user, _expired_tokens}} =
-      Accounts.login_user_by_magic_link(token)
-
-    user
+    attrs
+    |> unconfirmed_user_fixture()
+    |> Accounts.User.confirm_changeset()
+    |> Cookbook.Repo.update!()
   end
 
   def user_scope_fixture do
@@ -70,12 +63,6 @@ defmodule Cookbook.AccountsFixtures do
       ),
       set: [authenticated_at: authenticated_at]
     )
-  end
-
-  def generate_user_magic_link_token(user) do
-    {encoded_token, user_token} = Accounts.UserToken.build_email_token(user, "login")
-    Cookbook.Repo.insert!(user_token)
-    {encoded_token, user_token.token}
   end
 
   def offset_user_token(token, amount_to_add, unit) do

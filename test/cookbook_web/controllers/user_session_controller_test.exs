@@ -2,10 +2,9 @@ defmodule CookbookWeb.UserSessionControllerTest do
   use CookbookWeb.ConnCase, async: true
 
   import Cookbook.AccountsFixtures
-  alias Cookbook.Accounts
 
   setup do
-    %{unconfirmed_user: unconfirmed_user_fixture(), user: user_fixture()}
+    %{user: user_fixture()}
   end
 
   describe "POST /users/log-in - email and password" do
@@ -72,60 +71,60 @@ defmodule CookbookWeb.UserSessionControllerTest do
     end
   end
 
-  describe "POST /users/log-in - magic link" do
-    test "logs the user in", %{conn: conn, user: user} do
-      {token, _hashed_token} = generate_user_magic_link_token(user)
-
-      conn =
-        post(conn, ~p"/users/log-in", %{
-          "user" => %{"token" => token}
-        })
-
-      assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/recipes"
-
-      # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
-      response = html_response(conn, 200)
-      assert response =~ user.email
-      assert response =~ ~p"/users/settings"
-      assert response =~ ~p"/users/log-out"
+  describe "POST /users/log-in - failed attempts" do
+    # A unique IP per test, so the per-IP limit doesn't affect other tests.
+    setup %{conn: conn} do
+      %{conn: %{conn | remote_ip: {10, 0, 0, System.unique_integer([:positive])}}}
     end
 
-    test "confirms unconfirmed user", %{conn: conn, unconfirmed_user: user} do
-      {token, _hashed_token} = generate_user_magic_link_token(user)
-      refute user.confirmed_at
+    test "refuses the right password after 5 failed attempts for an email", %{
+      conn: conn,
+      user: user
+    } do
+      user = set_password(user)
 
-      conn =
-        post(conn, ~p"/users/log-in", %{
-          "user" => %{"token" => token},
-          "_action" => "confirmed"
-        })
+      for _ <- 1..5 do
+        conn = log_in(conn, user.email, "invalid_password")
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      end
 
-      assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/recipes"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "User confirmed successfully."
+      conn = log_in(conn, String.upcase(user.email), valid_user_password())
 
-      assert Accounts.get_user!(user.id).confirmed_at
-
-      # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
-      response = html_response(conn, 200)
-      assert response =~ user.email
-      assert response =~ ~p"/users/settings"
-      assert response =~ ~p"/users/log-out"
-    end
-
-    test "redirects to login page when magic link is invalid", %{conn: conn} do
-      conn =
-        post(conn, ~p"/users/log-in", %{
-          "user" => %{"token" => "invalid"}
-        })
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "The link is invalid or it has expired."
-
+      refute get_session(conn, :user_token)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Too many failed log in attempts"
       assert redirected_to(conn) == ~p"/users/log-in"
+    end
+
+    test "refuses log in after 20 failed attempts from an IP address", %{
+      conn: conn,
+      user: user
+    } do
+      user = set_password(user)
+
+      for _ <- 1..20 do
+        log_in(conn, unique_user_email(), "invalid_password")
+      end
+
+      conn = log_in(conn, user.email, valid_user_password())
+
+      refute get_session(conn, :user_token)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Too many failed log in attempts"
+    end
+
+    test "still logs in after fewer failed attempts", %{conn: conn, user: user} do
+      user = set_password(user)
+
+      for _ <- 1..4 do
+        log_in(conn, user.email, "invalid_password")
+      end
+
+      conn = log_in(conn, user.email, valid_user_password())
+
+      assert get_session(conn, :user_token)
+    end
+
+    defp log_in(conn, email, password) do
+      post(conn, ~p"/users/log-in", %{"user" => %{"email" => email, "password" => password}})
     end
   end
 

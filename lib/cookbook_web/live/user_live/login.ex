@@ -1,8 +1,6 @@
 defmodule CookbookWeb.UserLive.Login do
   use CookbookWeb, :live_view
 
-  alias Cookbook.Accounts
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -11,52 +9,11 @@ defmodule CookbookWeb.UserLive.Login do
         <div class="text-center">
           <.header>
             <p>Log in</p>
-            <:subtitle>
-              <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
-              <% else %>
-                Don't have an account? <.link
-                  navigate={~p"/users/register"}
-                  class="font-semibold text-brand hover:underline"
-                  phx-no-format
-                >Sign up</.link> for an account now.
-              <% end %>
+            <:subtitle :if={@current_scope}>
+              You need to reauthenticate to perform sensitive actions on your account.
             </:subtitle>
           </.header>
         </div>
-
-        <div :if={local_mail_adapter?()} class="alert alert-info">
-          <.icon name="hero-information-circle" class="size-6 shrink-0" />
-          <div>
-            <p>You are running the local mail adapter.</p>
-            <p>
-              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
-            </p>
-          </div>
-        </div>
-
-        <.form
-          :let={f}
-          for={@form}
-          id="login_form_magic"
-          action={~p"/users/log-in"}
-          phx-submit="submit_magic"
-        >
-          <.input
-            readonly={!!@current_scope}
-            field={f[:email]}
-            type="email"
-            label="Email"
-            autocomplete="email"
-            required
-            phx-mounted={JS.focus()}
-          />
-          <.button class="btn btn-primary w-full">
-            Log in with email <span aria-hidden="true">→</span>
-          </.button>
-        </.form>
-
-        <div class="divider">or</div>
 
         <.form
           :let={f}
@@ -73,6 +30,7 @@ defmodule CookbookWeb.UserLive.Login do
             label="Email"
             autocomplete="email"
             required
+            phx-mounted={JS.focus()}
           />
           <.input
             field={@form[:password]}
@@ -80,11 +38,9 @@ defmodule CookbookWeb.UserLive.Login do
             label="Password"
             autocomplete="current-password"
           />
-          <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
-            Log in and stay logged in <span aria-hidden="true">→</span>
-          </.button>
-          <.button class="btn btn-primary btn-soft w-full mt-2">
-            Log in only this time
+          <.input field={@form[:remember_me]} type="checkbox" label="Stay logged in" />
+          <.button id="login-button" class="btn btn-primary w-full">
+            Log in <span aria-hidden="true">→</span>
           </.button>
         </.form>
       </div>
@@ -98,7 +54,7 @@ defmodule CookbookWeb.UserLive.Login do
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
         get_in(socket.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
 
-    form = to_form(%{"email" => email}, as: "user")
+    form = to_form(%{"email" => email, "remember_me" => "true"}, as: "user")
 
     {:ok, assign(socket, form: form, trigger_submit: false)}
   end
@@ -106,26 +62,5 @@ defmodule CookbookWeb.UserLive.Login do
   @impl true
   def handle_event("submit_password", _params, socket) do
     {:noreply, assign(socket, :trigger_submit, true)}
-  end
-
-  def handle_event("submit_magic", %{"user" => %{"email" => email}}, socket) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_login_instructions(
-        user,
-        &url(~p"/users/log-in/#{&1}")
-      )
-    end
-
-    info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
-
-    {:noreply,
-     socket
-     |> put_flash(:info, info)
-     |> push_navigate(to: ~p"/users/log-in")}
-  end
-
-  defp local_mail_adapter? do
-    Application.get_env(:cookbook, Cookbook.Mailer)[:adapter] == Swoosh.Adapters.Local
   end
 end

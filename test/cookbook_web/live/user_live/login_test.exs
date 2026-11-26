@@ -6,48 +6,23 @@ defmodule CookbookWeb.UserLive.LoginTest do
 
   describe "login page" do
     test "renders login page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+      {:ok, lv, html} = live(conn, ~p"/users/log-in")
 
       assert html =~ "Log in"
-      assert html =~ "Register"
-      assert html =~ "Log in with email"
-    end
-  end
-
-  describe "user login - magic link" do
-    test "sends magic link email when user exists", %{conn: conn} do
-      user = user_fixture()
-
-      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
-
-      {:ok, _lv, html} =
-        form(lv, "#login_form_magic", user: %{email: user.email})
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/users/log-in")
-
-      assert html =~ "If your email is in our system"
-
-      assert Cookbook.Repo.get_by!(Cookbook.Accounts.UserToken, user_id: user.id).context ==
-               "login"
-    end
-
-    test "does not disclose if user is registered", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
-
-      {:ok, _lv, html} =
-        form(lv, "#login_form_magic", user: %{email: "idonotexist@example.com"})
-        |> render_submit()
-        |> follow_redirect(conn, ~p"/users/log-in")
-
-      assert html =~ "If your email is in our system"
+      assert has_element?(lv, "#login_form_password")
+      refute has_element?(lv, "#login_form_magic")
     end
   end
 
   describe "user login - password" do
-    test "redirects if user logs in with valid credentials", %{conn: conn} do
+    test "logs in and stays logged in with valid credentials", %{conn: conn} do
       user = user_fixture() |> set_password()
 
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      assert has_element?(lv, "#login-button")
+      refute has_element?(lv, "#login_form_password button:not(#login-button)")
+      assert has_element?(lv, "#user_remember_me[checked]")
 
       form =
         form(lv, "#login_form_password",
@@ -57,6 +32,24 @@ defmodule CookbookWeb.UserLive.LoginTest do
       conn = submit_form(form, conn)
 
       assert redirected_to(conn) == ~p"/recipes"
+      assert conn.resp_cookies["_cookbook_web_user_remember_me"]
+    end
+
+    test "logs in only for the session when stay logged in is unchecked", %{conn: conn} do
+      user = user_fixture() |> set_password()
+
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      form =
+        form(lv, "#login_form_password",
+          user: %{email: user.email, password: valid_user_password(), remember_me: false}
+        )
+
+      conn = submit_form(form, conn)
+
+      assert redirected_to(conn) == ~p"/recipes"
+      assert get_session(conn, :user_token)
+      refute conn.resp_cookies["_cookbook_web_user_remember_me"]
     end
 
     test "redirects to login page with a flash error if credentials are invalid", %{
@@ -76,16 +69,10 @@ defmodule CookbookWeb.UserLive.LoginTest do
   end
 
   describe "login navigation" do
-    test "redirects to registration page when the Register button is clicked", %{conn: conn} do
+    test "has no link to a registration page", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      {:ok, _login_live, login_html} =
-        lv
-        |> element("main a", "Sign up")
-        |> render_click()
-        |> follow_redirect(conn, ~p"/users/register")
-
-      assert login_html =~ "Register"
+      refute has_element?(lv, ~s{a[href="/users/register"]})
     end
   end
 
@@ -99,11 +86,9 @@ defmodule CookbookWeb.UserLive.LoginTest do
       {:ok, _lv, html} = live(conn, ~p"/users/log-in")
 
       assert html =~ "You need to reauthenticate"
-      refute html =~ "Register"
-      assert html =~ "Log in with email"
 
       assert html =~
-               ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
+               ~s(<input type="email" name="user[email]" id="login_form_password_email" value="#{user.email}")
     end
   end
 end

@@ -49,8 +49,12 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  # TLS with certificate and hostname verification. Set DATABASE_SSL=false
+  # only when the database is reached over a private network without TLS.
+  database_ssl = System.get_env("DATABASE_SSL", "true") not in ~w(false 0)
+
   config :cookbook, Cookbook.Repo,
-    # ssl: true,
+    ssl: database_ssl,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     # For machines with several cores, consider starting multiple pools of `pool_size`

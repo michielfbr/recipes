@@ -10,6 +10,7 @@ defmodule CookbookWeb.Router do
     plug :put_root_layout, html: {CookbookWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug CookbookWeb.ContentSecurityPolicy
     plug :fetch_current_scope_for_user
   end
 
@@ -40,8 +41,12 @@ defmodule CookbookWeb.Router do
     scope "/dev" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: CookbookWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      live_dashboard "/dashboard",
+        metrics: CookbookWeb.Telemetry,
+        csp_nonce_assign_key: %{script: :csp_nonce, style: :csp_nonce}
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview,
+        csp_nonce_assign_key: %{script: :csp_nonce, style: :csp_nonce}
     end
   end
 
@@ -70,9 +75,7 @@ defmodule CookbookWeb.Router do
 
     live_session :current_user,
       on_mount: [{CookbookWeb.UserAuth, :mount_current_scope}] do
-      live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
-      live "/users/log-in/:token", UserLive.Confirmation, :new
     end
 
     post "/users/log-in", UserSessionController, :create
