@@ -35,6 +35,11 @@ config :cookbook, Cookbook.AI.OpenRouter,
   model: "test/model",
   plug: {Req.Test, Cookbook.AI.OpenRouter}
 
+# Stub recipe page fetches with Req.Test and resolve hosts without DNS
+config :cookbook, Cookbook.Recipes.Import.Fetcher,
+  plug: {Req.Test, Cookbook.Recipes.Import.Fetcher},
+  resolver: Cookbook.Recipes.Import.TestResolver
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

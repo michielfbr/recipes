@@ -56,10 +56,10 @@ Each step ends in a working, tested state. Run `mix precommit` after each step.
 
 New module `Cookbook.Recipes.Import.URL` with `clean(url) :: {:ok, String.t()} | {:error, :invalid_url}`.
 
-- [ ] Trim whitespace and parse with `URI.new/1`. Accept only `http` and `https` URLs with a host; anything else becomes `{:error, :invalid_url}`.
-- [ ] Remove every query parameter whose name starts with `utm_` (for example `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`). Keep all other parameters in their original order. Drop the `?` when no parameters are left.
-- [ ] Keep the path and fragment unchanged.
-- [ ] Tests:
+- [x] Trim whitespace and parse with `URI.new/1`. Accept only `http` and `https` URLs with a host; anything else becomes `{:error, :invalid_url}`.
+- [x] Remove every query parameter whose name starts with `utm_` (for example `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`). Keep all other parameters in their original order. Drop the `?` when no parameters are left.
+- [x] Keep the path and fragment unchanged.
+- [x] Tests:
   - `https://example.com/recept?utm_source=nieuwsbrief&utm_medium=email` becomes `https://example.com/recept`.
   - `https://example.com/recept?id=5&utm_campaign=x&page=2` becomes `https://example.com/recept?id=5&page=2`.
   - A URL without parameters is unchanged.
@@ -69,27 +69,27 @@ New module `Cookbook.Recipes.Import.URL` with `clean(url) :: {:ok, String.t()} |
 
 New module `Cookbook.Recipes.Import.Fetcher` with `fetch(url) :: {:ok, html} | {:error, reason}`. It receives the cleaned URL from step 1.
 
-- [ ] SSRF protection: resolve the host and reject loopback, private, link-local and similar addresses (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`, `fc00::/7`, `fe80::/10`, `0.0.0.0`).
-- [ ] Follow at most 3 redirects by hand (`redirect: false`), checking every new address the same way.
-- [ ] Use a 10-second timeout and a 3 MB size limit (the Picnic page is 763 KB).
-- [ ] Use an honest User-Agent, such as `Cookbook recipe importer`.
-- [ ] Map failures to error reasons:
+- [x] SSRF protection: resolve the host and reject loopback, private, link-local and similar addresses (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`, `fc00::/7`, `fe80::/10`, `0.0.0.0`).
+- [x] Follow at most 3 redirects by hand (`redirect: false`), checking every new address the same way.
+- [x] Use a 10-second timeout and a 3 MB size limit (the Picnic page is 763 KB).
+- [x] Use an honest User-Agent, such as `Cookbook recipe importer`.
+- [x] Map failures to error reasons:
   - `:blocked` (403 or 429)
   - `:not_found` (404)
   - `:unreachable` (DNS failure, timeout or 5xx)
   - `:too_large`
   - `:not_html`
-- [ ] Tests use `Req.Test` stubs and cover: success, a redirect to a private IP being rejected, 403 becoming `:blocked`, and the size limit.
+- [x] Tests use `Req.Test` stubs and cover: success, a redirect to a private IP being rejected, 403 becoming `:blocked`, and the size limit.
 
 ### Step 3: Extract the recipe from HTML
 
 New module `Cookbook.Recipes.Import.Extractor` with `extract(html) :: {:ok, {:json_ld | :microdata | :text, content}} | {:error, :no_recipe}`.
 
-- [ ] Move `lazy_html` from `only: :test` to a runtime dependency in `mix.exs`.
-- [ ] Implement extraction steps 1 to 4 from "How it works".
-- [ ] Return `{:error, :no_recipe}` when the result is too short to be a recipe (for example, under 200 characters).
-- [ ] Save fixtures in `test/support/fixtures/recipe_pages/`: `dekrat.html` (JSON-LD) and `picnic.html` (script text). Download them again from the URLs in "Site test results"; the earlier copies were in a temporary folder.
-- [ ] Tests:
+- [x] Move `lazy_html` from `only: :test` to a runtime dependency in `mix.exs`.
+- [x] Implement extraction steps 1 to 4 from "How it works".
+- [x] Return `{:error, :no_recipe}` when the result is too short to be a recipe (for example, under 200 characters).
+- [x] Save fixtures in `test/support/fixtures/recipe_pages/`: `dekrat.html` (JSON-LD) and `picnic.html` (script text). Download them again from the URLs in "Site test results"; the earlier copies were in a temporary folder.
+- [x] Tests:
   - De Krat gives `:json_ld` with 14 ingredients and no image or author fields.
   - Picnic gives `:text` that contains both "chorizoworst" and "Kook ondertussen 300 g fusilli".
   - A page with only navigation gives `:no_recipe`.
@@ -98,9 +98,9 @@ New module `Cookbook.Recipes.Import.Extractor` with `extract(html) :: {:ok, {:js
 
 Add `from_url(scope, url) :: {:ok, params} | {:error, reason}` to `Cookbook.Recipes.Import` from part 1.
 
-- [ ] The order is: `URL.clean/1`, then `Fetcher.fetch/1`, then `Extractor.extract/1`, then `OpenRouter.extract_recipe/2`. Build the params the same way as `from_text/2`.
-- [ ] Set `"source"` in the params to the cleaned URL, so it's saved with the recipe and shows in the form's source field.
-- [ ] Tests run `from_url/2` end to end with stubbed HTTP and check:
+- [x] The order is: `URL.clean/1`, then `Fetcher.fetch/1`, then `Extractor.extract/1`, then `OpenRouter.extract_recipe/2`. Build the params the same way as `from_text/2`.
+- [x] Set `"source"` in the params to the cleaned URL, so it's saved with the recipe and shows in the form's source field.
+- [x] Tests run `from_url/2` end to end with stubbed HTTP and check:
   - A URL with `utm_` parameters is fetched without them (assert on the request the stub receives).
   - `"source"` holds the cleaned URL.
   - Errors from each stage come through unchanged.
@@ -109,20 +109,20 @@ Add `from_url(scope, url) :: {:ok, params} | {:error, reason}` to `Cookbook.Reci
 
 Edit `lib/cookbook_web/live/recipe_live/index.ex`.
 
-- [ ] Add a **From website** card (`id="new-from-website"`) to the modal from part 1, as the first option.
-- [ ] Clicking it reveals a URL field and an "Import" button in the modal. The field gets focus when it appears.
-- [ ] Submitting goes to `/recipes/import?url=…`.
-- [ ] Tests: the third card is present, and submitting a URL navigates to the import route with the URL.
+- [x] Add a **From website** card (`id="new-from-website"`) to the modal from part 1, as the first option.
+- [x] Clicking it reveals a URL field and an "Import" button in the modal. The field gets focus when it appears.
+- [x] Submitting goes to `/recipes/import?url=…`.
+- [x] Tests: the third card is present, and submitting a URL navigates to the import route with the URL.
 
 ### Step 6: URL import on the recipe form
 
 Edit `lib/cookbook_web/live/recipe_live/form.ex`.
 
-- [ ] Add `apply_action(socket, :import, %{"url" => url})` next to the text version from part 1:
+- [x] Add `apply_action(socket, :import, %{"url" => url})` next to the text version from part 1:
   - Run `Import.from_url/2` in the background with `start_async`.
   - While it runs, show "Reading recipe from {host}…" with the same loading state as part 1.
-- [ ] Success works the same as a text import, plus the `source` field is filled with the cleaned URL.
-- [ ] When the import fails, show a message with buttons for **Paste text instead** (goes to `/recipes/import`) and **Start from scratch**:
+- [x] Success works the same as a text import, plus the `source` field is filled with the cleaned URL.
+- [x] When the import fails, show a message with buttons for **Paste text instead** (goes to `/recipes/import`) and **Start from scratch**:
 
   | Error | Message |
   |---|---|
@@ -133,16 +133,16 @@ Edit `lib/cookbook_web/live/recipe_live/form.ex`.
   | `:too_large`, `:not_html` | "This page can't be imported." |
   | AI errors | The same messages as part 1. |
 
-- [ ] Tests use stubbed HTTP and check:
+- [x] Tests use stubbed HTTP and check:
   - The URL import shows the loading state, then a filled form with the cleaned URL in the source field.
   - The 403 path shows the blocked message and the "paste text" button.
   - Saving creates the recipe with `source` set to the cleaned URL, without `utm_` parameters.
 
 ### Step 7: Polish and finish
 
-- [ ] Check the loading state, the error states and the modal on mobile width.
-- [ ] Manual check with a real API key against the three test sites, including one URL with `utm_` parameters.
-- [ ] Run `mix precommit` and make sure it passes cleanly.
+- [x] Check the loading state, the error states and the modal on mobile width.
+- [x] Manual check with a real API key against the three test sites, including one URL with `utm_` parameters.
+- [x] Run `mix precommit` and make sure it passes cleanly.
 
 ## Out of scope for now
 

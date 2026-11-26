@@ -79,6 +79,9 @@ defmodule CookbookWeb.RecipeLiveTest do
       assert has_element?(index_live, "#new-recipe[phx-click]")
       assert has_element?(index_live, "#new-recipe-modal #new-recipe-modal-close")
 
+      assert has_element?(index_live, "#new-recipe-modal button#new-from-website")
+      assert has_element?(index_live, "#new-recipe-modal #import-url-form #import-url-input")
+
       assert has_element?(
                index_live,
                ~s(#new-recipe-modal a#new-from-text[href="/recipes/import"])
@@ -88,6 +91,26 @@ defmodule CookbookWeb.RecipeLiveTest do
                index_live,
                ~s(#new-recipe-modal a#new-from-scratch[href="/recipes/new"])
              )
+    end
+
+    test "From website goes to the import page with the URL", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+      url = "https://www.dekrat.nl/recept/paella?utm_source=x"
+
+      assert {:error, {:live_redirect, %{to: to}}} =
+               index_live
+               |> form("#import-url-form", import: %{url: "  #{url} "})
+               |> render_submit()
+
+      assert to == ~p"/recipes/import?#{[url: url]}"
+    end
+
+    test "From website ignores a blank URL", %{conn: conn} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      index_live |> form("#import-url-form", import: %{url: " "}) |> render_submit()
+
+      assert has_element?(index_live, "#import-url-form")
     end
 
     test "From text goes to the import page", %{conn: conn} do
