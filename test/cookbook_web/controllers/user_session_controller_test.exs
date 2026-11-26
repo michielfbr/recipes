@@ -71,6 +71,63 @@ defmodule CookbookWeb.UserSessionControllerTest do
     end
   end
 
+  describe "POST /users/log-in - failed attempts" do
+    # A unique IP per test, so the per-IP limit doesn't affect other tests.
+    setup %{conn: conn} do
+      %{conn: %{conn | remote_ip: {10, 0, 0, System.unique_integer([:positive])}}}
+    end
+
+    test "refuses the right password after 5 failed attempts for an email", %{
+      conn: conn,
+      user: user
+    } do
+      user = set_password(user)
+
+      for _ <- 1..5 do
+        conn = log_in(conn, user.email, "invalid_password")
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      end
+
+      conn = log_in(conn, String.upcase(user.email), valid_user_password())
+
+      refute get_session(conn, :user_token)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Too many failed log in attempts"
+      assert redirected_to(conn) == ~p"/users/log-in"
+    end
+
+    test "refuses log in after 20 failed attempts from an IP address", %{
+      conn: conn,
+      user: user
+    } do
+      user = set_password(user)
+
+      for _ <- 1..20 do
+        log_in(conn, unique_user_email(), "invalid_password")
+      end
+
+      conn = log_in(conn, user.email, valid_user_password())
+
+      refute get_session(conn, :user_token)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Too many failed log in attempts"
+    end
+
+    test "still logs in after fewer failed attempts", %{conn: conn, user: user} do
+      user = set_password(user)
+
+      for _ <- 1..4 do
+        log_in(conn, user.email, "invalid_password")
+      end
+
+      conn = log_in(conn, user.email, valid_user_password())
+
+      assert get_session(conn, :user_token)
+    end
+
+    defp log_in(conn, email, password) do
+      post(conn, ~p"/users/log-in", %{"user" => %{"email" => email, "password" => password}})
+    end
+  end
+
   describe "DELETE /users/log-out" do
     test "logs the user out", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> delete(~p"/users/log-out")

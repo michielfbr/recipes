@@ -12,8 +12,7 @@ defmodule Cookbook.Application do
       Cookbook.Repo,
       {DNSCluster, query: Application.get_env(:cookbook, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Cookbook.PubSub},
-      # Start a worker by calling: Cookbook.Worker.start_link(arg)
-      # {Cookbook.Worker, arg},
+      Cookbook.RateLimiter,
       # Start to serve requests, typically the last entry
       CookbookWeb.Endpoint
     ]
