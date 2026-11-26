@@ -15,10 +15,14 @@ defmodule CookbookWeb.UserLive.LoginTest do
   end
 
   describe "user login - password" do
-    test "redirects if user logs in with valid credentials", %{conn: conn} do
+    test "logs in and stays logged in with valid credentials", %{conn: conn} do
       user = user_fixture() |> set_password()
 
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      assert has_element?(lv, "#login-button")
+      refute has_element?(lv, "#login_form_password button:not(#login-button)")
+      assert has_element?(lv, "#user_remember_me[checked]")
 
       form =
         form(lv, "#login_form_password",
@@ -28,6 +32,24 @@ defmodule CookbookWeb.UserLive.LoginTest do
       conn = submit_form(form, conn)
 
       assert redirected_to(conn) == ~p"/recipes"
+      assert conn.resp_cookies["_cookbook_web_user_remember_me"]
+    end
+
+    test "logs in only for the session when stay logged in is unchecked", %{conn: conn} do
+      user = user_fixture() |> set_password()
+
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      form =
+        form(lv, "#login_form_password",
+          user: %{email: user.email, password: valid_user_password(), remember_me: false}
+        )
+
+      conn = submit_form(form, conn)
+
+      assert redirected_to(conn) == ~p"/recipes"
+      assert get_session(conn, :user_token)
+      refute conn.resp_cookies["_cookbook_web_user_remember_me"]
     end
 
     test "redirects to login page with a flash error if credentials are invalid", %{

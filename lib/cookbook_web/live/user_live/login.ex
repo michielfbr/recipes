@@ -38,11 +38,9 @@ defmodule CookbookWeb.UserLive.Login do
             label="Password"
             autocomplete="current-password"
           />
-          <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
-            Log in and stay logged in <span aria-hidden="true">→</span>
-          </.button>
-          <.button class="btn btn-primary btn-soft w-full mt-2">
-            Log in only this time
+          <.input field={@form[:remember_me]} type="checkbox" label="Stay logged in" />
+          <.button id="login-button" class="btn btn-primary w-full">
+            Log in <span aria-hidden="true">→</span>
           </.button>
         </.form>
       </div>
@@ -56,7 +54,7 @@ defmodule CookbookWeb.UserLive.Login do
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
         get_in(socket.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
 
-    form = to_form(%{"email" => email}, as: "user")
+    form = to_form(%{"email" => email, "remember_me" => "true"}, as: "user")
 
     {:ok, assign(socket, form: form, trigger_submit: false)}
   end
