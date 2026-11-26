@@ -17,6 +17,10 @@ config :cookbook, CookbookWeb.Endpoint,
     hosts: ["localhost", "127.0.0.1"]
   ]
 
+# Only send the session and remember me cookies over HTTPS. Off in dev and
+# test, which run on plain HTTP.
+config :cookbook, secure_cookies: true
+
 # Configure Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Req
 
